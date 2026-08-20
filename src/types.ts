@@ -1,0 +1,94 @@
+export type PaymentMethod = 'JazzCash' | 'EasyPaisa';
+
+export interface PlayerProfile {
+  name: string;
+  whatsapp: string;
+  gameUID: string;
+  paymentMethod: PaymentMethod;
+  paymentAccount: string;
+  email: string;
+  photo?: string;
+  walletBalance: number;
+  totalEarnings: number;
+  tournamentsPlayed: number;
+  tournamentsWon: number;
+  totalKills: number;
+  activeTournaments?: string[];
+  activeTournament?: string | null;
+  activeTournamentName?: string | null;
+  createdAt?: string | { toDate?: () => Date; seconds?: number };
+  fcmToken?: string;
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  mode?: string; // Solo, Duo, Squad, Clash Squad
+  map?: string; // Bermuda, Purgatory, Kalahari, Alpine
+  entryFee: number;
+  joinedCount: number;
+  maxPlayers: number;
+  time: string; // e.g. "8:00 PM Tonight"
+  status: 'open' | 'full' | 'closed' | 'upcoming';
+  prizes?: number[];
+  prize1?: number;
+  prize2?: number;
+  prize3?: number;
+  killPrize?: number;
+  killEnabled?: boolean;
+  roomId?: string;
+  roomPassword?: string;
+  isRegistered?: boolean;
+}
+
+export interface Transaction {
+  id?: string;
+  type: 'deposit' | 'withdrawal' | 'withdrawal_pending' | 'withdrawal_rejected' | 'entry_fee' | 'prize' | 'kill_prize' | 'admin_update';
+  tournamentId?: string;
+  description: string;
+  amount: number;
+  createdAt?: string | { toDate?: () => Date; seconds?: number };
+  timestamp?: { toDate?: () => Date; seconds?: number };
+}
+
+export interface Winner {
+  position: number;
+  name: string;
+  uid: string;
+  prize: number;
+  kills?: number;
+}
+
+export interface MatchResult {
+  id: string;
+  tournamentName: string;
+  completedAt: string | { toDate?: () => Date; seconds?: number };
+  winners: Winner[];
+  topKiller?: {
+    name: string;
+    kills: number;
+  };
+  totalPlayers?: number;
+  totalPrize?: number;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  emoji?: string;
+  type?: 'update' | 'poll' | 'announcement';
+  pinned?: boolean;
+  options?: string[];
+  votes?: number[];
+  createdAt?: string | { toDate?: () => Date; seconds?: number };
+}
+
+export interface SupportRequest {
+  name: string;
+  whatsapp: string;
+  issueType: 'deposit' | 'withdrawal' | 'tournament' | 'account' | 'other';
+  message: string;
+  status: 'pending' | 'resolved';
+  createdAt: string;
+}
