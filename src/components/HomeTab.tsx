@@ -240,7 +240,7 @@ export const HomeTab: React.FC = () => {
           <div className="w-10 h-10 mx-auto rounded-lg bg-[#2ECC71]/10 text-[#2ECC71] flex items-center justify-center mb-2">
             <Trophy className="w-5 h-5" />
           </div>
-          <div className="font-heading font-black text-2xl sm:text-3xl text-[#2ECC71]">Rs 50K+</div>
+          <div className="font-heading font-black text-2xl sm:text-3xl text-[#2ECC71]">Rs 10K+</div>
           <div className="text-xs text-[#7A84A8] font-medium">Prizes Distributed</div>
         </div>
 
@@ -248,7 +248,7 @@ export const HomeTab: React.FC = () => {
           <div className="w-10 h-10 mx-auto rounded-lg bg-[#F5A623]/10 text-[#F5A623] flex items-center justify-center mb-2">
             <Users className="w-5 h-5" />
           </div>
-          <div className="font-heading font-black text-2xl sm:text-3xl text-[#F5A623]">1,500+</div>
+          <div className="font-heading font-black text-2xl sm:text-3xl text-[#F5A623]">1,000+</div>
           <div className="text-xs text-[#7A84A8] font-medium">Active Gamers</div>
         </div>
 
@@ -256,7 +256,7 @@ export const HomeTab: React.FC = () => {
           <div className="w-10 h-10 mx-auto rounded-lg bg-[#4A9EFF]/10 text-[#4A9EFF] flex items-center justify-center mb-2">
             <Gamepad2 className="w-5 h-5" />
           </div>
-          <div className="font-heading font-black text-2xl sm:text-3xl text-[#4A9EFF]">80+</div>
+          <div className="font-heading font-black text-2xl sm:text-3xl text-[#4A9EFF]">30+</div>
           <div className="text-xs text-[#7A84A8] font-medium">Tournaments Hosted</div>
         </div>
 
@@ -438,7 +438,7 @@ export const HomeTab: React.FC = () => {
           <div>
             <h3 className="font-heading font-bold text-base text-[#EEF0FF] uppercase">Daily Matches</h3>
             <p className="text-xs text-[#7A84A8] leading-relaxed">
-              Daily tournaments scheduled from 3 PM to 11 PM PKT. Solo, Duo, and Squad battles every day.
+              Daily tournaments scheduled from 8 AM to 10 PM PKT. Solo, Duo, and Squad battles every day.
             </p>
           </div>
         </div>
