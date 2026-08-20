@@ -40,6 +40,17 @@ export const WalletTab: React.FC = () => {
     if (txFilter === 'prizes') return tx.type === 'prize' || tx.type === 'kill_prize';
     if (txFilter === 'withdrawals') return tx.type.startsWith('withdrawal');
     return true;
+        })
+  .sort((a, b) => {
+    const getTime = (t: any) => {
+      const val = t.createdAt || t.timestamp;
+      if (!val) return 0;
+      if (typeof val.toMillis === 'function') return val.toMillis(); // Firestore Timestamp
+      if (val instanceof Date) return val.getTime();
+      if (typeof val === 'number') return val;
+      return new Date(val).getTime();
+    };
+    return getTime(b) - getTime(a); // latest first
   });
 
   return (
