@@ -258,7 +258,7 @@ export const TournamentsTab: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Prize Breakdown Banner */}
+               {/* Prize Breakdown Banner */}
                 <div className="bg-[#F5A623]/10 border border-[#F5A623]/25 rounded-xl p-3 flex items-center justify-between gap-2 mb-4">
                   <div>
                     <div className="text-[10px] font-tech uppercase text-[#7A84A8]">Guaranteed Pool</div>
@@ -267,11 +267,19 @@ export const TournamentsTab: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right text-[11px] text-[#EEF0FF] space-y-0.5">
-                    <div>🥇 Rs {prizes[0] || 600} &nbsp;|&nbsp; 🥈 Rs {prizes[1] || 400}</div>
-                    <div className="text-[#7A84A8]">🥉 Rs {prizes[2] || 200} + 💀 Rs {killBonus}/kill</div>
+                    <div>
+                      🥇 Rs {prizes[0] || 0}
+                      {prizes[1] !== undefined && prizes[1] !== null && <> &nbsp;|&nbsp; 🥈 Rs {prizes[1]}</>}
+                    </div>
+                    {(prizes[2] !== undefined && prizes[2] !== null) || killBonus > 0 ? (
+                      <div className="text-[#7A84A8]">
+                        {prizes[2] !== undefined && prizes[2] !== null && <>🥉 Rs {prizes[2]}</>}
+                        {prizes[2] !== undefined && prizes[2] !== null && killBonus > 0 && <> + </>}
+                        {killBonus > 0 && <>💀 Rs {killBonus}/kill</>}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-
                 {/* Action CTA */}
                 {isJoined ? (
                   <div className="w-full py-3 bg-[#2ECC71]/15 border border-[#2ECC71]/40 rounded-xl text-center">
