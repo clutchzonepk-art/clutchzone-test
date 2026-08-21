@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clutch Zone — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Exo+2:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#F5A623;--dark:#080B14;--dark2:#0F1220;--dark3:#161A2E;--dark4:#1E2340;--dark5:#252B47;--border:rgba(245,166,35,0.18);--border2:rgba(255,255,255,0.07);--text:#EEF0FF;--dim:#7A84A8;--green:#2ECC71;--red:#E74C3C;--blue:#4A9EFF;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Exo 2',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--dark2);border:1px solid var(--border);border-radius:20px;padding:40px 30px;text-align:center;max-width:360px;width:100%;}
+.login-icon{font-size:52px;margin-bottom:16px;}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;margin-bottom:8px;}
+.login-sub{font-size:14px;color:var(--dim);margin-bottom:28px;line-height:1.6;}
+.err-box{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:10px;padding:12px;font-size:13px;color:var(--red);margin-top:12px;display:none;}
+#admin-panel{display:none;}
+.lbar{height:3px;background:linear-gradient(90deg,var(--gold),#D4891C);width:100%;display:none;position:fixed;top:0;left:0;z-index:999;animation:slide 1.2s infinite;}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.anav{background:var(--dark2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.alogo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.alogo .icon{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.alogo span{color:var(--gold);}
+.ainfo{display:flex;align-items:center;gap:10px;}
+.aemail{font-size:11px;color:var(--dim);}
+.logout-btn{background:var(--dark4);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.atabs{display:flex;padding:12px 16px 0;border-bottom:1px solid var(--border2);background:var(--dark2);overflow-x:auto;gap:0;}
+.atab{padding:10px 18px;border:none;background:none;color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.2s;}
+.atab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.acontent{padding:16px;max-width:1100px;}
+.tab-sec{display:none;}.tab-sec.active{display:block;}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;}
+.sbox{background:var(--dark3);border:1px solid var(--border2);border-radius:14px;padding:18px;}
+.sbox-icon{font-size:22px;margin-bottom:8px;}
+.sbox-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--gold);}
+.sbox-lbl{font-size:12px;color:var(--dim);margin-top:2px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;}
+.search{width:100%;background:var(--dark3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:14px;outline:none;margin-bottom:14px;transition:border-color 0.2s;}
+.search:focus{border-color:var(--gold);}
+.atable{width:100%;border-collapse:collapse;background:var(--dark3);border-radius:14px;overflow:hidden;font-size:13px;}
+.atable th{background:var(--dark4);padding:12px 14px;text-align:left;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;}
+.atable td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+.atable tr:last-child td{border-bottom:none;}
+.atable tr:hover td{background:rgba(255,255,255,0.02);}
+.tdn{font-weight:600;font-size:14px;}.tds{font-size:11px;color:var(--dim);margin-top:2px;}
+.uid-tag{background:rgba(74,158,255,0.1);border:1px solid rgba(74,158,255,0.2);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--blue);font-family:'Rajdhani',sans-serif;font-weight:700;}
+.bal-tag{background:rgba(245,166,35,0.1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+.abtn{padding:6px 12px;border-radius:8px;border:none;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin:2px;transition:opacity 0.2s;}
+.abtn:hover{opacity:0.82;}
+.gold-btn{background:rgba(245,166,35,0.15);color:var(--gold);border:1px solid var(--border);}
+.red-btn{background:rgba(231,76,60,0.15);color:var(--red);border:1px solid rgba(231,76,60,0.3);}
+.green-btn{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.3);}
+.wa-btn{background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.3);}
+.blue-btn{background:rgba(74,158,255,0.15);color:var(--blue);border:1px solid rgba(74,158,255,0.2);}
+.t-card{background:var(--dark3);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px;}
+.t-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.t-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;}
+.t-sub{font-size:13px;color:var(--dim);margin-top:4px;}
+.stag{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Rajdhani',sans-serif;text-transform:uppercase;}
+.stag.open{background:rgba(46,204,113,0.12);color:var(--green);border:1px solid rgba(46,204,113,0.25);}
+.stag.closed{background:rgba(231,76,60,0.12);color:var(--red);border:1px solid rgba(231,76,60,0.25);}
+.stag.upcoming{background:rgba(74,158,255,0.12);color:var(--blue);border:1px solid rgba(74,158,255,0.25);}
+.t-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.t-box{background:var(--dark4);border-radius:8px;padding:10px;text-align:center;}
+.t-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;}
+.t-lbl{font-size:11px;color:var(--dim);margin-top:2px;}
+.t-actions{display:flex;flex-wrap:wrap;gap:6px;}
+.w-card{background:var(--dark3);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px;}
+.w-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.w-name{font-weight:700;font-size:16px;}.w-sub{font-size:12px;color:var(--dim);margin-top:4px;}
+.w-amt{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--gold);}
+.p-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.p-row:last-child{border-bottom:none;}
+.p-num{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--gold);width:28px;}
+.p-info{flex:1;font-size:14px;font-weight:600;}
+.guide-box{background:var(--dark3);border:1px solid var(--border2);border-radius:14px;padding:20px;}
+.g-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;color:var(--dim);line-height:1.7;}
+.g-item:last-child{border-bottom:none;}
+.g-item strong{color:var(--gold);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:flex-end;backdrop-filter:blur(4px);}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--dark2);border-top:1px solid var(--border);border-radius:22px 22px 0 0;padding:24px;width:100%;max-height:92vh;overflow-y:auto;animation:su 0.3s ease;}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:36px;height:4px;background:var(--dark5);border-radius:2px;margin:0 auto 20px;}
+.mtitle{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+.mclose{cursor:pointer;font-size:22px;color:var(--dim);}
+.fg{margin-bottom:14px;}
+.fl{font-size:12px;color:var(--dim);margin-bottom:7px;display:block;font-family:'Rajdhani',sans-serif;font-weight:600;text-transform:uppercase;}
+.fi{width:100%;background:var(--dark3);border:1px solid var(--border2);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s;}
+.fi:focus{border-color:var(--gold);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.notice{background:rgba(245,166,35,0.07);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;color:var(--dim);margin-bottom:14px;line-height:1.6;}
+.notice strong{color:var(--gold);}
+.btn-gold{width:100%;padding:15px;background:linear-gradient(135deg,#F5A623,#D4891C);border:none;border-radius:10px;color:#000;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;cursor:pointer;margin-top:6px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark3);border:1px solid var(--border);border-radius:50px;padding:12px 22px;font-size:14px;font-family:'Rajdhani',sans-serif;font-weight:600;z-index:300;white-space:nowrap;opacity:0;transition:opacity 0.3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="lbar" id="lbar"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">ADMIN ACCESS</div>
+    <p class="login-sub">Sirf admin login kar sakta hai.<br>Admin Gmail se login karo.</p>
+    <button class="btn-gold" onclick="adminLogin()">Login with Google</button>
+    <div class="err-box" id="err-box"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="anav">
+    <div class="alogo"><div class="icon">👑</div>CLUTCH <span>ZONE</span> ADMIN</div>
+    <div class="ainfo">
+      <span class="aemail" id="aemail"></span>
+      <button class="logout-btn" onclick="adminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="atabs">
+    <button class="atab active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="atab" onclick="switchTab('players',this)">👥 Players</button>
+    <button class="atab" onclick="switchTab('tournaments',this)">🏆 Tournaments</button>
+    <button class="atab" onclick="switchTab('withdrawals',this)">💸 Withdrawals</button>
+    <button class="atab" onclick="switchTab('announcements',this)">📢 Announcements</button>
+    <button class="atab" onclick="switchTab('results',this)">🏆 Match Results</button>
+    <button class="atab" onclick="switchTab('referrals',this)">🔗 Referrals</button>
+    <button class="atab" onclick="switchTab('notify',this)">🔔 Notify</button>
+  </div>
+
+  <div class="acontent">
+
+    <!-- DASHBOARD -->
+    <div class="tab-sec active" id="tab-dashboard">
+      <br>
+      <div class="stats-row">
+        <div class="sbox"><div class="sbox-icon">👥</div><div class="sbox-val" id="s-players">-</div><div class="sbox-lbl">Total Players</div></div>
+        <div class="sbox"><div class="sbox-icon">🏆</div><div class="sbox-val" id="s-tours">-</div><div class="sbox-lbl">Tournaments</div></div>
+        <div class="sbox"><div class="sbox-icon">💸</div><div class="sbox-val" id="s-pending">-</div><div class="sbox-lbl">Pending Withdrawals</div></div>
+        <div class="sbox"><div class="sbox-icon">💰</div><div class="sbox-val" id="s-bal">-</div><div class="sbox-lbl">Total Wallet Balance</div></div>
+      </div>
+      <div class="guide-box">
+        <div class="sec-title" style="margin-bottom:14px">⚡ Quick Guide</div>
+        <div class="g-item"><strong>💰 Player ne deposit kiya:</strong> Players Tab → Search karo → 💰 Balance → Add → Amount enter → Save! Balance update ho jaega.</div>
+        <div class="g-item"><strong>🏆 Tournament banao:</strong> Tournaments Tab → ➕ Create New → Name, Time, Prizes fill karo → Save! Website pe live ho jaega.</div>
+        <div class="g-item"><strong>💸 Withdrawal approve karo:</strong> Withdrawals Tab → Request dekho → ✅ Approve → Player ko WhatsApp message jaega automatically.</div>
+        <div class="g-item"><strong>🔗 Referral cashback do:</strong> Referrals Tab → Pending cashback dekho → ✅ Give Cashback click karo → Rs 20 auto unki wallet mein add ho jata hai.</div>
+        <div class="g-item"><strong>🔍 Player dhundna:</strong> Players Tab → Search box mein naam, UID ya WhatsApp likho.</div>
+      </div>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="tab-sec" id="tab-players">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">👥 Players</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="abtn green-btn" onclick="loadAll()">🔄 Refresh</button>
+          <button class="abtn" style="background:#25D366;color:#fff" onclick="exportWhatsAppNumbers()">📋 Export Numbers (WASender)</button>
+        </div>
+      </div>
+      <input type="text" class="search" id="psearch" placeholder="🔍 Search: naam, UID, WhatsApp, email..." oninput="searchPlayers()">
+      <div style="overflow-x:auto">
+        <table class="atable">
+          <thead><tr><th>Player</th><th>Game UID</th><th>WhatsApp</th><th>Balance</th><th>Payment</th><th>Actions</th></tr></thead>
+          <tbody id="ptbody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--dim)">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="tab-sec" id="tab-tournaments">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">🏆 Tournaments</div>
+        <button class="abtn green-btn" onclick="openCreateT()">➕ Create New</button>
+      </div>
+      <div id="tlist"><div style="text-align:center;padding:30px;color:var(--dim)">Loading...</div></div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div class="tab-sec" id="tab-withdrawals">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">💸 Withdrawal Requests</div>
+        <button class="abtn blue-btn" onclick="loadAll()">🔄 Refresh</button>
+      </div>
+      <div id="wlist"><div style="text-align:center;padding:30px;color:var(--dim)">Loading...</div></div>
+    </div>
+
+    <!-- ANNOUNCEMENTS TAB -->
+    <div class="tab-sec" id="tab-announcements">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">📢 Announcements</div>
+        <button class="abtn green-btn" onclick="showModal('ann-modal')">➕ Create New</button>
+      </div>
+      <div id="ann-admin-list"><div style="text-align:center;padding:30px;color:var(--dim)">Loading...</div></div>
+    </div>
+
+    <!-- MATCH RESULTS TAB -->
+    <div class="tab-sec" id="tab-results">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">🏆 Match Results</div>
+        <button class="abtn green-btn" onclick="showModal('result-modal')">➕ Post Result</button>
+      </div>
+      <div id="results-admin-list"><div style="text-align:center;padding:30px;color:var(--dim)">Loading...</div></div>
+    </div>
+
+    <!-- REFERRALS TAB -->
+    <div class="tab-sec" id="tab-referrals">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">🔗 Referral Cashbacks</div>
+        <button class="abtn blue-btn" onclick="loadReferralCashbacks()">🔄 Refresh</button>
+      </div>
+      <div class="notice"><strong>How it works:</strong> Jab referred player pehla tournament join kare → aapko WhatsApp notification aata hai + yahan dikhta hai. "Give Cashback" click karo → Rs 20 automatically unki wallet mein add ho jata hai.</div>
+      <div id="referrals-list"><div style="text-align:center;padding:30px;color:var(--dim)">Loading...</div></div>
+    </div>
+
+    <!-- NOTIFY TAB -->
+    <div class="tab-sec" id="tab-notify">
+      <br>
+      <div class="sec-hdr">
+        <div class="sec-title">🔔 Send Push Notification</div>
+      </div>
+      <div class="notice"><strong>How it works:</strong> Yeh direct player ke phone pe OS notification bhejta hai (jinhone app install/permission allow ki hai). WhatsApp nahi, real push notification.</div>
+
+      <div class="fg"><label class="fl">Title</label><input type="text" class="fi" id="ntf-title" placeholder="e.g. Tournament Starting Soon!"></div>
+      <div class="fg"><label class="fl">Message</label><input type="text" class="fi" id="ntf-body" placeholder="e.g. Battle Royale shuru hone wala hai, abhi join karo!"></div>
+
+      <div class="fg">
+        <label class="fl">Target Audience</label>
+        <select class="fi" id="ntf-target" onchange="onNtfTargetChange()">
+          <option value="all">👥 All Players</option>
+          <option value="nonjoiners">🎯 Non-Joiners of a Tournament</option>
+          <option value="joiners">✅ Joined Players of a Tournament</option>
+        </select>
+      </div>
+
+      <div class="fg" id="ntf-tournament-wrap" style="display:none">
+        <label class="fl">Select Tournament</label>
+        <select class="fi" id="ntf-tid"><option value="">-- Loading tournaments... --</option></select>
+      </div>
+
+      <button class="btn-gold" onclick="sendBroadcastNotification()" id="ntf-send-btn">🔔 SEND NOTIFICATION</button>
+      <div id="ntf-result" style="margin-top:14px;font-size:13px;color:var(--dim)"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: UPDATE BALANCE -->
+<div class="modal-overlay" id="bal-modal" onclick="closeOut(event,'bal-modal')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">💰 Update Balance <span class="mclose" onclick="hideModal('bal-modal')">✕</span></div>
+    <div class="notice">Player: <strong id="ub-name">-</strong><br>Current Balance: <strong id="ub-cur">Rs 0</strong></div>
+    <div class="fg"><label class="fl">Action</label>
+  <select class="fi" id="ub-action">
+    <option value="add">➕ Add (Deposit received)</option>
+    <option value="deduct">➖ Deduct</option>
+    <option value="set">🔄 Set exact amount</option>
+  </select>
+</div>
+
+<div class="fg"><label class="fl">Transaction Type</label>
+  <select class="fi" id="ub-type">
+    <option value="deposit">Deposit</option>
+    <option value="prize">Tournament Prize</option>
+    <option value="kill_prize">Kill Reward</option>
+    <option value="admin_update">Other / Correction</option>
+  </select>
+</div>
+    <div class="fg"><label class="fl">Amount (Rs)</label><input type="number" class="fi" id="ub-amount" placeholder="Amount enter karo" min="1"></div>
+    <div class="fg"><label class="fl">Reason (optional)</label><input type="text" class="fi" id="ub-reason" placeholder="e.g. JazzCash deposit Rs 500"></div>
+    <button class="btn-gold" onclick="saveBal()">💾 UPDATE BALANCE</button>
+  </div>
+</div>
+
+<!-- MODAL: CREATE/EDIT TOURNAMENT -->
+<div class="modal-overlay" id="t-modal" onclick="closeOut(event,'t-modal')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle"><span id="tmodal-title">➕ Create Tournament</span> <span class="mclose" onclick="hideModal('t-modal')">✕</span></div>
+    <input type="hidden" id="t-id">
+    <div class="fg"><label class="fl">Tournament Name *</label><input type="text" class="fi" id="t-name" placeholder="e.g. Daily Clash #1"></div>
+    <div class="fg"><label class="fl">Date & Time *</label><input type="text" class="fi" id="t-time" placeholder="e.g. Aaj 8:00 PM"></div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">Max Players</label><input type="number" class="fi" id="t-max" value="50"></div>
+      <div class="fg"><label class="fl">Entry Fee (Rs)</label><input type="number" class="fi" id="t-entry" value="70"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">🏆 Prize Positions</label>
+      <div id="t-prizes-list"></div>
+      <button type="button" class="abtn blue-btn" style="width:100%;margin-top:2px" onclick="addPrizeSlot()">➕ Add Position</button>
+    </div>
+    <div class="fg">
+      <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="t-kill-enabled" checked onchange="toggleKillField()" style="width:16px;height:16px"> 💀 Enable Kill Reward
+      </label>
+      <input type="number" class="fi" id="t-kill" value="20" style="margin-top:8px" placeholder="Rs per kill">
+    </div>
+    <div class="fg"><label class="fl">Status</label>
+      <select class="fi" id="t-status">
+        <option value="open">Open</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="closed">Closed</option>
+      </select>
+    </div>
+    <button class="btn-gold" onclick="saveT()">💾 SAVE TOURNAMENT</button>
+  </div>
+</div>
+
+<!-- MODAL: PARTICIPANTS -->
+<div class="modal-overlay" id="pm-modal" onclick="closeOut(event,'pm-modal')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle"><span id="pm-title">Players</span> <span class="mclose" onclick="hideModal('pm-modal')">✕</span></div>
+    <div id="pm-list"></div>
+  </div>
+</div>
+
+<!-- MODAL: PRIZE DISTRIBUTION -->
+<div class="modal-overlay" id="prize-modal" onclick="closeOut(event,'prize-modal')">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="mhandle"></div>
+    <div class="mtitle">🏆 Distribute Prizes <span class="mclose" onclick="hideModal('prize-modal')">✕</span></div>
+    <div id="prize-t-name" style="color:var(--gold);font-weight:700;margin-bottom:14px;font-size:15px"></div>
+
+    <!-- WINNERS (dynamic — matches this tournament's prize positions) -->
+    <div style="font-size:13px;color:var(--dim);margin-bottom:8px;font-weight:600">🏆 WINNERS</div>
+    <div id="prize-winners-list"></div>
+
+    <!-- KILL BONUSES (only shown if this tournament has kill reward enabled) -->
+    <div id="kill-bonus-section">
+      <div style="font-size:13px;color:var(--dim);margin-top:14px;margin-bottom:8px;font-weight:600">💀 KILL BONUSES (Rs <span id="prize-kill-rate">20</span>/kill)</div>
+      <div id="kill-bonus-list"></div>
+      <button class="abtn blue-btn" style="margin-bottom:14px;width:100%" onclick="addKillRow()">➕ Add Player Kill Bonus</button>
+    </div>
+
+    <button class="btn-gold" onclick="distributeAllPrizes()">🏆 DISTRIBUTE ALL PRIZES</button>
+  </div>
+</div>
+
+<!-- MODAL: POST MATCH RESULT -->
+<div class="modal-overlay" id="result-modal" onclick="closeOut(event,'result-modal')">
+  <div class="modal" style="max-height:92vh;overflow-y:auto">
+    <div class="mhandle"></div>
+    <div class="mtitle">🏆 Post Match Result <span class="mclose" onclick="hideModal('result-modal')">✕</span></div>
+
+    <div class="fg">
+      <label class="fl">Tournament Name *</label>
+      <input type="text" class="fi" id="res-tname" placeholder="e.g. Daily Clash #5">
+    </div>
+
+    <div style="font-size:13px;color:var(--dim);margin-bottom:10px;font-weight:600;margin-top:4px">🥇 TOP 3 WINNERS</div>
+
+    <div style="background:var(--dark4);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px">🥇 1ST PLACE</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Player Name</label><input type="text" class="fi" id="res-name1" placeholder="In-Game Name"></div>
+        <div class="fg"><label class="fl">Game UID</label><input type="text" class="fi" id="res-uid1" placeholder="UID"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Prize (Rs)</label><input type="number" class="fi" id="res-prize1" placeholder="600" value="600"></div>
+        <div class="fg"><label class="fl">Kills</label><input type="number" class="fi" id="res-kills1" placeholder="0" min="0"></div>
+      </div>
+    </div>
+
+    <div style="background:var(--dark4);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:12px;color:#C0C0C0;font-weight:700;margin-bottom:10px">🥈 2ND PLACE</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Player Name</label><input type="text" class="fi" id="res-name2" placeholder="In-Game Name"></div>
+        <div class="fg"><label class="fl">Game UID</label><input type="text" class="fi" id="res-uid2" placeholder="UID"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Prize (Rs)</label><input type="number" class="fi" id="res-prize2" placeholder="400" value="400"></div>
+        <div class="fg"><label class="fl">Kills</label><input type="number" class="fi" id="res-kills2" placeholder="0" min="0"></div>
+      </div>
+    </div>
+
+    <div style="background:var(--dark4);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;color:#CD7F32;font-weight:700;margin-bottom:10px">🥉 3RD PLACE</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Player Name</label><input type="text" class="fi" id="res-name3" placeholder="In-Game Name"></div>
+        <div class="fg"><label class="fl">Game UID</label><input type="text" class="fi" id="res-uid3" placeholder="UID"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">Prize (Rs)</label><input type="number" class="fi" id="res-prize3" placeholder="200" value="200"></div>
+        <div class="fg"><label class="fl">Kills</label><input type="number" class="fi" id="res-kills3" placeholder="0" min="0"></div>
+      </div>
+    </div>
+
+    <!-- Extra winner blocks (4th, 5th... for CS tournaments) get appended here -->
+    <div id="res-extra-winners"></div>
+    <button class="abtn blue-btn" style="width:100%;margin-bottom:14px" onclick="addResultWinner()">➕ Add Winner (4th, 5th...)</button>
+
+    <div style="font-size:13px;color:var(--dim);margin-bottom:10px;font-weight:600">💀 TOP FRAGGER (optional)</div>
+    <div class="fgrid" style="margin-bottom:14px">
+      <div class="fg"><label class="fl">Player Name</label><input type="text" class="fi" id="res-frag-name" placeholder="Top killer name"></div>
+      <div class="fg"><label class="fl">Total Kills</label><input type="number" class="fi" id="res-frag-kills" placeholder="e.g. 12" min="0"></div>
+    </div>
+
+    <div class="fgrid" style="margin-bottom:6px">
+      <div class="fg"><label class="fl">Total Players</label><input type="number" class="fi" id="res-total-players" placeholder="e.g. 48" min="1"></div>
+      <div class="fg"><label class="fl">Total Prize Pool (Rs)</label><input type="number" class="fi" id="res-total-prize" placeholder="e.g. 1200"></div>
+    </div>
+
+    <button class="btn-gold" onclick="postMatchResult()">📤 POST MATCH RESULT</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, serverTimestamp, increment, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAtzCy0CzlheMJJhGCdHdwGg9CDP6KQQg4",
+    authDomain: "clutchzone-de519.firebaseapp.com",
+    projectId: "clutchzone-de519",
+    storageBucket: "clutchzone-de519.firebasestorage.app",
+    messagingSenderId: "753147427268",
+    appId: "1:753147427268:web:3b86fed888fe9d608ccc91"
+  };
+
+  const ADMIN_EMAIL = "clutchzone.pk@gmail.com";
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  // Expose globally for announcement functions
+  window._db = db;
+  window._collection = collection;
+  window._getDocs = getDocs;
+  window._getDoc = getDoc;
+  window._addDoc = addDoc;
+  window._updateDoc = updateDoc;
+  window._deleteDoc = deleteDoc;
+  window._doc = doc;
+  window._increment = increment;
+  window._arrayRemove = arrayRemove;
+  window._serverTimestamp = serverTimestamp;
+
+  // ============================================
+  // PUSH NOTIFICATIONS (via Cloudflare Worker → FCM)
+  // Replace ADMIN_SECRET_HERE with the exact same value you set as the
+  // ADMIN_SECRET variable in your Cloudflare Worker settings.
+  // ============================================
+  const NOTIFY_WORKER_URL = "https://clutchzone-notify.clutchzone-pk.workers.dev/send";
+  const NOTIFY_ADMIN_SECRET = "cz_9k2Lp7xR4qZ";
+  window._notifyWorkerUrl = NOTIFY_WORKER_URL;
+  window._notifyAdminSecret = NOTIFY_ADMIN_SECRET;
+
+  async function sendPush(playerFBUID, title, body, url) {
+    if (!playerFBUID) return;
+    try {
+      const pSnap = await getDoc(doc(db, 'players', playerFBUID));
+      const token = pSnap.exists() ? pSnap.data().fcmToken : null;
+      if (!token) return; // player never enabled notifications — skip silently
+      await fetch(NOTIFY_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': NOTIFY_ADMIN_SECRET },
+        body: JSON.stringify({ token, title, body, url: url || '/' })
+      });
+    } catch (e) {
+      console.warn('Push notify failed (non-blocking):', e.message);
+    }
+  }
+  window._sendPush = sendPush;
+
+  let allPlayers = [], allTournaments = [], allWithdrawals = [];
+
+  // ===== AUTH =====
+  window.adminLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result.user.email !== ADMIN_EMAIL) {
+        await signOut(auth);
+        showErr("❌ Access Denied! Sirf admin login kar sakta hai.");
+      }
+    } catch(e) { showErr("Login failed: " + e.message); }
+  };
+
+  window.adminLogout = async () => { await signOut(auth); };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      document.getElementById('aemail').textContent = user.email;
+      await loadAll();
+    } else {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('admin-panel').style.display = 'none';
+      if (user) { await signOut(auth); showErr("❌ Access Denied!"); }
+    }
+  });
+
+  // ===== LOAD ALL =====
+  async function loadAll() {
+    loading(true);
+    try {
+      // Players
+      const pSnap = await getDocs(collection(db, "players"));
+      allPlayers = [];
+      let totalBal = 0;
+      pSnap.forEach(d => { allPlayers.push({id:d.id,...d.data()}); totalBal += (d.data().walletBalance||0); });
+
+      // Tournaments
+      const tSnap = await getDocs(collection(db, "tournaments"));
+      allTournaments = [];
+      tSnap.forEach(d => allTournaments.push({id:d.id,...d.data()}));
+      window.allTournaments = allTournaments;
+
+      // Withdrawals
+      const wSnap = await getDocs(collection(db, "withdrawalRequests"));
+      allWithdrawals = [];
+      wSnap.forEach(d => allWithdrawals.push({id:d.id,...d.data()}));
+      const pending = allWithdrawals.filter(w => w.status==='pending').length;
+
+      document.getElementById('s-players').textContent = allPlayers.length;
+      document.getElementById('s-tours').textContent = allTournaments.length;
+      document.getElementById('s-pending').textContent = pending;
+      document.getElementById('s-bal').textContent = 'Rs ' + totalBal.toLocaleString();
+
+      renderPlayers(allPlayers);
+      renderTournaments(allTournaments);
+      renderWithdrawals(allWithdrawals);
+
+    } catch(e) {
+      console.error(e);
+      const errHtml = '<div style="text-align:center;padding:30px;color:#E74C3C">❌ Error: ' + e.message + '</div>';
+      document.getElementById('ptbody').innerHTML = '<tr><td colspan="6">' + errHtml + '</td></tr>';
+      document.getElementById('tlist').innerHTML = errHtml;
+      document.getElementById('wlist').innerHTML = errHtml;
+      showToast("❌ " + e.message);
+    }
+    loading(false);
+  }
+
+  window.loadAll = loadAll;
+
+  function loading(v) { document.getElementById('lbar').style.display = v ? 'block' : 'none'; }
+
+  // ===== PLAYERS =====
+  function renderPlayers(players) {
+    const tb = document.getElementById('ptbody');
+    if (!players.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--dim)">Koi player registered nahi</td></tr>';
+      return;
+    }
+    tb.innerHTML = players.map(p => `
+      <tr>
+        <td><div class="tdn">${p.name||'-'}</div><div class="tds">${p.email||'-'}</div></td>
+        <td><span class="uid-tag">${p.gameUID||'-'}</span></td>
+        <td>${p.whatsapp||'-'}</td>
+        <td><span class="bal-tag">Rs ${(p.walletBalance||0).toLocaleString()}</span></td>
+        <td><div>${p.paymentMethod||'-'}</div><div class="tds">${p.paymentAccount||''}</div></td>
+        <td>
+          <button class="abtn gold-btn" onclick="openBal('${p.id}','${(p.name||'').replace(/'/g,'`')}',${p.walletBalance||0})">💰 Balance</button>
+          <button class="abtn wa-btn" onclick="window.open('https://wa.me/92${(p.whatsapp||'').replace(/^0/,'').replace(/\D/g,'')}','_blank')">📱 WA</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  window.searchPlayers = () => {
+    const q = document.getElementById('psearch').value.toLowerCase().trim();
+    if (!q) { renderPlayers(allPlayers); return; }
+    renderPlayers(allPlayers.filter(p =>
+      (p.name||'').toLowerCase().includes(q) ||
+      (p.gameUID||'').toLowerCase().includes(q) ||
+      (p.whatsapp||'').toLowerCase().includes(q) ||
+      (p.email||'').toLowerCase().includes(q)
+    ));
+  };
+
+  window.openBal = (id, name, bal) => {
+    document.getElementById('ub-name').textContent = name;
+    document.getElementById('ub-cur').textContent = 'Rs ' + Number(bal).toLocaleString();
+    document.getElementById('ub-amount').value = '';
+    document.getElementById('ub-action').value = 'add';
+    document.getElementById('ub-reason').value = '';
+    document.getElementById('ub-type').value = 'admin_update';   // ← naya
+    window._balId = id;
+    window._balCur = Number(bal);
+    showModal('bal-modal');
+};
+
+ window.saveBal = async () => {
+    const amt = parseInt(document.getElementById('ub-amount').value);
+    if (!amt || amt <= 0) { showToast('❌ Valid amount enter karo!'); return; }
+    const action = document.getElementById('ub-action').value;
+    const reason = document.getElementById('ub-reason').value.trim() || 'Admin update';
+    const txType = document.getElementById('ub-type').value || 'admin_update';   // ← naya
+    const cur = window._balCur;
+    const newBal = action==='add' ? cur+amt : action==='deduct' ? Math.max(0,cur-amt) : amt;
+    try {
+      await updateDoc(doc(db,'players',window._balId), {walletBalance: newBal});
+      await addDoc(collection(db,'players',window._balId,'transactions'), {
+        type: txType, description:reason,   // ← 'admin_update' hataya
+        amount: action==='add'?amt:action==='deduct'?-amt:newBal-cur,
+        createdAt: new Date().toISOString(),
+        timestamp: serverTimestamp()
+      });
+      hideModal('bal-modal');
+      showToast('✅ Balance update! Rs ' + newBal.toLocaleString());
+      await loadAll();
+    } catch(e) { showToast('❌ Error: ' + e.message); }
+};
+
+
+  // ===== DYNAMIC PRIZE SLOTS (Create/Edit Tournament) =====
+  const PRIZE_MEDALS = ['🥇','🥈','🥉'];
+  function prizeMedal(i) { return PRIZE_MEDALS[i-1] || '🏅'; } // i = 1-indexed position
+  function posLabel(i) { return i===1?'1st':i===2?'2nd':i===3?'3rd':(i+'th'); }
+
+  window.addPrizeSlot = (value) => {
+    const list = document.getElementById('t-prizes-list');
+    const idx = list.children.length + 1;
+    const row = document.createElement('div');
+    row.className = 'prize-slot-row';
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px';
+    row.innerHTML = `
+      <span style="min-width:64px;font-size:13px;color:var(--dim)">${prizeMedal(idx)} ${posLabel(idx)}</span>
+      <input type="number" class="fi t-prize-input" value="${value!=null?value:''}" placeholder="Amount (Rs)" style="flex:1">
+      ${idx>1 ? '<button type="button" class="abtn red-btn" style="padding:8px 10px" onclick="removePrizeSlot(this)">✕</button>' : ''}
+    `;
+    list.appendChild(row);
+  };
+
+  window.removePrizeSlot = (btn) => {
+    btn.closest('.prize-slot-row').remove();
+    renumberPrizeSlots();
+  };
+
+  function renumberPrizeSlots() {
+    document.querySelectorAll('#t-prizes-list .prize-slot-row').forEach((row, i) => {
+      const idx = i + 1;
+      row.querySelector('span').textContent = prizeMedal(idx) + ' ' + posLabel(idx);
+    });
+  }
+
+  function getPrizesFromForm() {
+    return Array.from(document.querySelectorAll('#t-prizes-list .t-prize-input')).map(inp => parseInt(inp.value) || 0);
+  }
+
+  window.toggleKillField = () => {
+    const enabled = document.getElementById('t-kill-enabled').checked;
+    document.getElementById('t-kill').style.display = enabled ? '' : 'none';
+  };
+
+  // ===== TOURNAMENTS =====
+  function renderTournaments(ts) {
+    const list = document.getElementById('tlist');
+    if (!ts.length) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dim)">Koi tournament nahi. Create karo!</div>';
+      return;
+    }
+    list.innerHTML = ts.map(t => `
+      <div class="t-card">
+        <div class="t-top">
+          <div>
+            <div class="t-name">${t.name}</div>
+            <div class="t-sub">Solo BR • ${t.time||'Time TBA'} • Rs ${t.entryFee||70} entry</div>
+          </div>
+          <span class="stag ${t.status||'open'}">${(t.status||'OPEN').toUpperCase()}</span>
+        </div>
+        <div class="t-grid">
+          <div class="t-box"><div class="t-val">Rs ${t.entryFee||70}</div><div class="t-lbl">Entry</div></div>
+          <div class="t-box"><div class="t-val">${t.maxPlayers||50}</div><div class="t-lbl">Max</div></div>
+          <div class="t-box"><div class="t-val" style="color:var(--gold)">Rs ${t.prize1||600}</div><div class="t-lbl">🥇 1st</div></div>
+          <div class="t-box"><div class="t-val">${(t.killEnabled===false || (!t.killEnabled && !t.killPrize)) ? '— Off' : 'Rs '+(t.killPrize||20)}</div><div class="t-lbl">💀 Kill</div></div>
+        </div>
+        <div class="t-actions">
+          <button class="abtn gold-btn" onclick="openEditT('${t.id}')">✏️ Edit</button>
+          <button class="abtn ${t.status==='open'?'red-btn':'green-btn'}" onclick="toggleT('${t.id}','${t.status||'open'}')">
+            ${t.status==='open'?'⏸ Close':'▶️ Open'}</button>
+          <button class="abtn blue-btn" onclick="viewParts('${t.id}','${(t.name||'').replace(/'/g,'`')}')">👥 Players</button>
+          <button class="abtn" style="background:#6c3483;color:#fff" onclick="openPrizeModal('${t.id}')">🏆 Prizes</button>
+          <button class="abtn red-btn" onclick="deleteT('${t.id}','${(t.name||'').replace(/'/g,'`')}')">🗑️ Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.openCreateT = () => {
+    document.getElementById('t-id').value = '';
+    document.getElementById('tmodal-title').textContent = '➕ Create Tournament';
+    document.getElementById('t-name').value = '';
+    document.getElementById('t-time').value = '';
+    document.getElementById('t-max').value = '50';
+    document.getElementById('t-entry').value = '70';
+    document.getElementById('t-prizes-list').innerHTML = '';
+    addPrizeSlot(600);
+    addPrizeSlot(400);
+    addPrizeSlot(200);
+    document.getElementById('t-kill-enabled').checked = true;
+    document.getElementById('t-kill').value = '20';
+    document.getElementById('t-kill').style.display = '';
+    document.getElementById('t-status').value = 'open';
+    showModal('t-modal');
+  };
+
+  window.openEditT = (tid) => {
+    const t = window.allTournaments.find(x => x.id===tid);
+    if (!t) return;
+    document.getElementById('t-id').value = tid;
+    document.getElementById('tmodal-title').textContent = '✏️ Edit Tournament';
+    document.getElementById('t-name').value = t.name||'';
+    document.getElementById('t-time').value = t.time||'';
+    document.getElementById('t-max').value = t.maxPlayers||50;
+    document.getElementById('t-entry').value = t.entryFee||70;
+
+    // Dynamic prizes — use new `prizes` array if present, else fall back to legacy prize1/2/3
+    document.getElementById('t-prizes-list').innerHTML = '';
+    const prizes = (Array.isArray(t.prizes) && t.prizes.length) ? t.prizes : [t.prize1||600, t.prize2||400, t.prize3||200];
+    prizes.forEach(p => addPrizeSlot(p));
+
+    // Kill reward toggle — respects explicit killEnabled flag, else infers from killPrize value
+    const killEnabled = t.killEnabled !== undefined ? !!t.killEnabled : (t.killPrize||0) > 0;
+    document.getElementById('t-kill-enabled').checked = killEnabled;
+    document.getElementById('t-kill').value = t.killPrize || 20;
+    document.getElementById('t-kill').style.display = killEnabled ? '' : 'none';
+
+    document.getElementById('t-status').value = t.status||'open';
+    showModal('t-modal');
+  };
+
+  window.saveT = async () => {
+    const name = document.getElementById('t-name').value.trim();
+    const time = document.getElementById('t-time').value.trim();
+    if (!name) { showToast('❌ Tournament name zaroor likho!'); return; }
+    if (!time) { showToast('❌ Time zaroor likho!'); return; }
+
+    const prizes = getPrizesFromForm();
+    if (!prizes.length || !prizes[0]) { showToast('❌ Kam az kam 1st Prize amount likho!'); return; }
+
+    const killEnabled = document.getElementById('t-kill-enabled').checked;
+    const killPrize = killEnabled ? (parseInt(document.getElementById('t-kill').value) || 0) : 0;
+
+    const data = {
+      name,
+      time,
+      maxPlayers: parseInt(document.getElementById('t-max').value) || 50,
+      entryFee: parseInt(document.getElementById('t-entry').value) || 70,
+      prizes,
+      // legacy mirrors kept in sync so any old code/UI reading prize1/2/3 still works
+      prize1: prizes[0]||0,
+      prize2: prizes[1]||0,
+      prize3: prizes[2]||0,
+      killEnabled,
+      killPrize,
+      status: document.getElementById('t-status').value,
+      mode: 'Solo BR',
+      updatedAt: serverTimestamp()
+      // BUG FIX 9: joinedCount is NOT included here — editing must never reset the player count!
+    };
+
+    const tid = document.getElementById('t-id').value;
+    try {
+      if (tid) {
+        // EDIT: never touch joinedCount
+        await updateDoc(doc(db,'tournaments',tid), data);
+        showToast('✅ Tournament update ho gaya!');
+      } else {
+        // CREATE: start at 0
+        data.joinedCount = 0;
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db,'tournaments'), data);
+        showToast('✅ Tournament create ho gaya!');
+      }
+      hideModal('t-modal');
+      await loadAll();
+    } catch(e) {
+      showToast('❌ Error: ' + e.message);
+      console.error(e);
+    }
+  };
+
+  window.toggleT = async (tid, status) => {
+    const ns = status==='open' ? 'closed' : 'open';
+    await updateDoc(doc(db,'tournaments',tid), {status:ns});
+    showToast('Tournament ' + ns + '!');
+    await loadAll();
+  };
+
+  window.deleteT = async (tid, name) => {
+    if (!confirm('Delete "' + name + '"? Yeh wapis nahi aayega!')) return;
+
+    // BUG FIX 10: Clear this tournament from all players who were in it (multi-join aware)
+    try {
+      const playersSnap = await getDocs(collection(db, 'players'));
+      const batch = [];
+      playersSnap.forEach(d => {
+        const pd = d.data();
+        const inLegacy = pd.activeTournament === tid;
+        const inArray = Array.isArray(pd.activeTournaments) && pd.activeTournaments.includes(tid);
+        if (inLegacy || inArray) {
+          batch.push(updateDoc(doc(db, 'players', d.id), {
+            activeTournament: null,
+            activeTournamentName: null,
+            activeTournaments: arrayRemove(tid)
+          }));
+        }
+      });
+      if (batch.length > 0) await Promise.all(batch);
+    } catch(e) { console.warn('Could not clear player activeTournament:', e.message); }
+
+    await deleteDoc(doc(db,'tournaments',tid));
+    showToast('🗑️ Tournament delete ho gaya!');
+    await loadAll();
+  };
+
+  window.viewParts = async (tid, tname) => {
+    document.getElementById('pm-title').textContent = tname + ' — Players';
+    const snap = await getDocs(collection(db,'tournaments',tid,'participants'));
+    const list = document.getElementById('pm-list');
+    if (snap.empty) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dim)">Koi player nahi join kiya abhi</div>';
+    } else {
+      let i=1, rows='';
+      snap.forEach(d => {
+        const p = d.data();
+        rows += `<div class="p-row">
+          <span class="p-num">#${i++}</span>
+          <div class="p-info"><div>${p.playerName||'-'}</div><div class="tds">UID: ${p.playerUID||'-'}</div></div>
+          <button class="abtn wa-btn" onclick="window.open('https://wa.me/92${(p.playerWhatsapp||'').replace(/^0/,'').replace(/\D/g,'')}','_blank')">📱</button>
+        </div>`;
+      });
+      list.innerHTML = rows;
+    }
+    showModal('pm-modal');
+  };
+
+  // ===== WITHDRAWALS =====
+  function renderWithdrawals(ws) {
+    const list = document.getElementById('wlist');
+    const pending = ws.filter(w => w.status==='pending');
+    if (!pending.length) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dim)">✅ Koi pending withdrawal nahi hai!</div>';
+      return;
+    }
+    list.innerHTML = pending.map(w => `
+      <div class="w-card">
+        <div class="w-top">
+          <div>
+            <div class="w-name">${w.playerName||'-'}</div>
+            <div class="w-sub">UID: ${w.playerUID||'-'} • ${w.playerWhatsapp||'-'}</div>
+          </div>
+          <div class="w-amt">Rs ${(w.amount||0).toLocaleString()}</div>
+        </div>
+        <div style="font-size:13px;color:var(--dim);margin-bottom:14px">💳 ${w.paymentMethod||'-'}: ${w.paymentAccount||'-'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="abtn green-btn" onclick="approveW('${w.id}','${(w.playerWhatsapp||'').replace(/^0/,'').replace(/\D/g,'')}',${w.amount||0},'${(w.playerName||'').replace(/'/g,'`')}','${w.paymentMethod||''}','${w.paymentAccount||''}')">✅ Approve & Notify</button>
+          <button class="abtn red-btn" onclick="rejectW('${w.id}','${(w.playerName||'').replace(/'/g,'`')}')">❌ Reject</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.approveW = async (wid, wa, amt, name, method, acc) => {
+    const btn = event && event.target ? event.target : null;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Approving...'; }
+
+    try {
+      // 1. Get the withdrawal request (has txDocId + playerFirebaseUID)
+      const wRef = doc(db, 'withdrawalRequests', wid);
+      const wDoc = await getDoc(wRef);
+      const wData = wDoc.exists() ? { id: wDoc.id, ...wDoc.data() } : null;
+
+      if (!wData) { showToast('❌ Request not found!'); return; }
+
+      // 2. Find player Firebase UID
+      const playerFBUID = wData.playerFirebaseUID || null;
+      if (!playerFBUID) { showToast('❌ Player UID missing! Manual process karein.'); return; }
+
+      // 3. UPDATE the pending transaction directly by stored ID
+      if (wData.txDocId) {
+        await updateDoc(doc(db, 'players', playerFBUID, 'transactions', wData.txDocId), {
+          type: 'withdrawal',
+          description: 'Withdrawal Approved - ' + method,
+          createdAt: new Date().toISOString()
+        });
+      } else {
+        // Fallback for legacy requests without a linked txDocId — match by amount
+        // (best effort; new withdrawals always have txDocId so this path won't be hit going forward)
+        const txSnap = await getDocs(collection(db, 'players', playerFBUID, 'transactions'));
+        let candidates = [];
+        txSnap.forEach(d => {
+          const td = d.data();
+          if (td.type === 'withdrawal_pending') candidates.push({ id: d.id, ...td });
+        });
+        // Prefer an exact amount match; fall back to oldest pending if none match
+        let pendingTxId = null;
+        const amtMatch = candidates.filter(c => Math.abs(c.amount) === amt);
+        if (amtMatch.length) {
+          amtMatch.sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+          pendingTxId = amtMatch[0].id;
+        } else if (candidates.length) {
+          candidates.sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+          pendingTxId = candidates[0].id;
+        }
+        if (pendingTxId) {
+          await updateDoc(doc(db, 'players', playerFBUID, 'transactions', pendingTxId), {
+            type: 'withdrawal',
+            description: 'Withdrawal Approved - ' + method,
+            createdAt: new Date().toISOString()
+          });
+        } else {
+          // No pending tx found — create approved tx directly
+          await addDoc(collection(db, 'players', playerFBUID, 'transactions'), {
+            type: 'withdrawal',
+            description: 'Withdrawal Approved - ' + method,
+            amount: -amt,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+
+      // 4. DO NOT deduct balance again — it was already deducted when player submitted the request (H-04 fix).
+      // Just read current balance for logging purposes.
+      const pDoc = await getDoc(doc(db, 'players', playerFBUID));
+      const curBal = pDoc.exists() ? (pDoc.data().walletBalance || 0) : 0;
+
+      // 5. Mark request as approved
+      await updateDoc(wRef, { status: 'approved', approvedAt: serverTimestamp(), newBalance: curBal });
+
+      // 6. WhatsApp to player
+      const msg = encodeURIComponent(`✅ *Clutch Zone Withdrawal Approved!*\nHi *${name}*!\nAapka withdrawal *Rs ${amt}* process ho gaya.\nAccount: *${method}* - *${acc}*\nShukriya! 🎮`);
+      window.open('https://wa.me/92' + wa + '?text=' + msg, '_blank');
+
+      // 7. Push notification to player's phone
+      sendPush(playerFBUID, '✅ Withdrawal Approved', `Rs ${amt} sent via ${method}`, '/wallet');
+
+      showToast('✅ Approved! Balance deducted. Player ko WhatsApp gaya!');
+      await loadAll();
+    } catch(e) {
+      showToast('❌ Error: ' + e.message);
+      console.error('approveW error:', e);
+      if (btn) { btn.disabled = false; btn.textContent = '✅ Approve & Notify'; }
+    }
+  };
+
+  window.rejectW = async (wid, name) => {
+    if (!confirm(name + ' ki request reject karni hai?')) return;
+    try {
+      // 1. Get the withdrawal request (has txDocId + playerFirebaseUID)
+      const wRef = doc(db, 'withdrawalRequests', wid);
+      const wDoc = await getDoc(wRef);
+      const wData = wDoc.exists() ? { id: wDoc.id, ...wDoc.data() } : null;
+
+      const playerFBUID = wData ? wData.playerFirebaseUID : null;
+
+      // 2. UPDATE the pending transaction directly by stored ID
+      if (playerFBUID && wData) {
+        if (wData.txDocId) {
+          await updateDoc(doc(db, 'players', playerFBUID, 'transactions', wData.txDocId), {
+            type: 'withdrawal_rejected',
+            description: 'Withdrawal Rejected - ' + (wData.paymentMethod || 'Request'),
+            createdAt: new Date().toISOString()
+          });
+        } else {
+          // Fallback for legacy requests without a linked txDocId — match by amount
+          const txSnap = await getDocs(collection(db, 'players', playerFBUID, 'transactions'));
+          let candidates = [];
+          txSnap.forEach(d => {
+            const td = d.data();
+            if (td.type === 'withdrawal_pending') candidates.push({ id: d.id, ...td });
+          });
+          let pendingTxId = null;
+          const amtMatch = candidates.filter(c => Math.abs(c.amount) === wData.amount);
+          if (amtMatch.length) {
+            amtMatch.sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+            pendingTxId = amtMatch[0].id;
+          } else if (candidates.length) {
+            candidates.sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+            pendingTxId = candidates[0].id;
+          }
+          if (pendingTxId) {
+            await updateDoc(doc(db, 'players', playerFBUID, 'transactions', pendingTxId), {
+              type: 'withdrawal_rejected',
+              description: 'Withdrawal Rejected - ' + (wData.paymentMethod || 'Request'),
+              createdAt: new Date().toISOString()
+            });
+          }
+        }
+      }
+
+      // 3. REFUND balance back to player on rejection
+      if (playerFBUID && wData && wData.amount) {
+        const pDoc = await getDoc(doc(db, 'players', playerFBUID));
+        const curBal = pDoc.exists() ? (pDoc.data().walletBalance || 0) : 0;
+        const refundedBal = curBal + wData.amount;
+        await updateDoc(doc(db, 'players', playerFBUID), { walletBalance: refundedBal });
+      }
+
+      // 4. Mark request as rejected
+      await updateDoc(wRef, { status: 'rejected', rejectedAt: serverTimestamp() });
+
+      // 4. Notify player on WhatsApp
+      if (wData && wData.playerWhatsapp) {
+        const waNum = wData.playerWhatsapp.replace(/^0/, '').replace(/\D/g, '');
+        const msg = encodeURIComponent(`❌ *Clutch Zone Withdrawal Rejected*\nHi *${name}*!\nAapki withdrawal request *Rs ${wData.amount}* reject ho gayi.\nKisi maslay k liye WhatsApp karo: 03270617401`);
+        window.open('https://wa.me/92' + waNum + '?text=' + msg, '_blank');
+      }
+
+      // 5. Push notification to player's phone
+      if (playerFBUID) {
+        sendPush(playerFBUID, '❌ Withdrawal Rejected', `Rs ${wData?.amount || 0} request ho gayi hai — balance refund ho gaya`, '/wallet');
+      }
+
+      showToast('❌ Request reject ho gayi!');
+      await loadAll();
+    } catch(e) { showToast('❌ Error: ' + e.message); console.error('rejectW error:', e); }
+  };
+
+  function showErr(msg) {
+    const el = document.getElementById('err-box');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  // ===== REFERRAL CASHBACKS =====
+  async function loadReferralCashbacks() {
+    const list = document.getElementById('referrals-list');
+    if (!list) return;
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dim)">Loading...</div>';
+    try {
+      const snap = await getDocs(collection(db, 'referralCashbacks'));
+      const docs = [];
+      snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+      const pending = docs.filter(d => d.status === 'pending');
+      const completed = docs.filter(d => d.status === 'completed');
+
+      if (!docs.length) {
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dim)">✅ Koi referral cashback nahi abhi.<br><small style="font-size:11px">Jab referred players pehla tournament join karenge, yahan dikhenge.</small></div>';
+        return;
+      }
+
+      let html = '';
+
+      if (pending.length > 0) {
+        html += `<div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--gold);margin-bottom:10px">⏳ PENDING CASHBACKS (${pending.length})</div>`;
+        html += pending.map(c => `
+          <div class="w-card">
+            <div class="w-top">
+              <div>
+                <div class="w-name">${c.playerName||'-'}</div>
+                <div class="w-sub">UID: ${c.playerUID||'-'}</div>
+                <div class="w-sub">WA: ${c.playerWhatsapp||'-'}</div>
+                <div class="w-sub" style="margin-top:4px">🔗 Referred by: <strong style="color:var(--gold)">${c.referredByName||'-'}</strong> (${c.referredByCode||'-'})</div>
+                <div class="w-sub">🏆 Tournament: ${c.tournamentName||'-'}</div>
+              </div>
+              <div class="w-amt" style="color:var(--green)">Rs ${c.amount||20}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button class="abtn green-btn" onclick="giveCashback('${c.id}','${(c.playerFirebaseUID||'')}','${(c.playerName||'').replace(/'/g,'`')}',${c.amount||20})">✅ Give Rs ${c.amount||20} Cashback</button>
+              <button class="abtn wa-btn" onclick="window.open('https://wa.me/92${(c.playerWhatsapp||'').replace(/^0/,'').replace(/\D/g,'')}','_blank')">📱 WhatsApp</button>
+            </div>
+          </div>`).join('');
+      } else {
+        html += '<div style="text-align:center;padding:20px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:12px;color:var(--green);margin-bottom:14px">✅ Koi pending cashback nahi!</div>';
+      }
+
+      if (completed.length > 0) {
+        html += `<div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--dim);margin:16px 0 10px">✅ COMPLETED (${completed.length})</div>`;
+        html += completed.slice(0, 15).map(c => `
+          <div style="background:var(--dark3);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:8px;opacity:0.65">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:700;font-size:14px">${c.playerName||'-'}</div>
+                <div style="font-size:11px;color:var(--dim)">Referred by: ${c.referredByName||'-'} • ${c.tournamentName||'-'}</div>
+              </div>
+              <div style="color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800">✅ Rs ${c.amount||20} Done</div>
+            </div>
+          </div>`).join('');
+      }
+
+      list.innerHTML = html;
+    } catch(e) {
+      list.innerHTML = `<div style="color:red;padding:20px">❌ Error: ${e.message}</div>`;
+    }
+  }
+
+  window.loadReferralCashbacks = loadReferralCashbacks;
+
+  window.giveCashback = async (cashbackId, playerFBUID, playerName, amount) => {
+    if (!confirm(`Rs ${amount} cashback dena hai "${playerName}" ko? Unki wallet mein add ho jaega.`)) return;
+    try {
+      const playerRef = doc(db, 'players', playerFBUID);
+      const pSnap = await getDoc(playerRef);
+      if (!pSnap.exists()) { showToast('❌ Player not found!'); return; }
+      const curBal = pSnap.data().walletBalance || 0;
+
+      await updateDoc(playerRef, { walletBalance: curBal + amount });
+
+      await addDoc(collection(db, 'players', playerFBUID, 'transactions'), {
+        type: 'deposit',
+        description: `Referral Cashback – Rs ${amount} (Admin)`,
+        amount,
+        createdAt: new Date().toISOString(),
+        timestamp: serverTimestamp()
+      });
+
+      await updateDoc(doc(db, 'referralCashbacks', cashbackId), {
+        status: 'completed',
+        completedAt: new Date().toISOString()
+      });
+
+      // Push notification to player's phone
+      sendPush(playerFBUID, '🎉 Referral Cashback!', `Rs ${amount} added to your wallet`, '/wallet');
+
+      showToast(`✅ Rs ${amount} cashback diya "${playerName}" ko!`);
+      loadReferralCashbacks();
+    } catch(e) {
+      showToast('❌ Error: ' + e.message);
+      console.error('giveCashback error:', e);
+    }
+  };
+</script>
+
+<!-- MODAL: CREATE ANNOUNCEMENT -->
+<div class="modal-overlay" id="ann-modal" onclick="closeOut(event,'ann-modal')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📢 Create Announcement <span class="mclose" onclick="hideModal('ann-modal')">✕</span></div>
+    <div class="fg">
+      <label class="fl">Type</label>
+      <select class="fi" id="ann-type" onchange="togglePollOptions()">
+        <option value="announcement">🔴 Announcement</option>
+        <option value="update">🟡 Tournament Update</option>
+        <option value="poll">🔵 Poll / Question</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Emoji (optional)</label><input type="text" class="fi" id="ann-emoji" placeholder="e.g. 🏆 🔥 ⚠️" maxlength="4"></div>
+    <div class="fg"><label class="fl">Title *</label><input type="text" class="fi" id="ann-title" placeholder="e.g. Tournament starting tonight!"></div>
+    <div class="fg"><label class="fl">Message</label><textarea class="fi" id="ann-body" rows="3" placeholder="Details..." style="resize:none"></textarea></div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="ann-pinned" style="width:18px;height:18px;cursor:pointer">
+      <label class="fl" style="margin:0;cursor:pointer" onclick="document.getElementById('ann-pinned').click()">📌 Pin this announcement (show at top)</label>
+    </div>
+    <div id="poll-opts-section" style="display:none">
+      <label class="fl">Poll Options (max 4)</label>
+      <input type="text" class="fi" id="poll-opt-1" placeholder="Option 1" style="margin-bottom:8px">
+      <input type="text" class="fi" id="poll-opt-2" placeholder="Option 2" style="margin-bottom:8px">
+      <input type="text" class="fi" id="poll-opt-3" placeholder="Option 3 (optional)" style="margin-bottom:8px">
+      <input type="text" class="fi" id="poll-opt-4" placeholder="Option 4 (optional)" style="margin-bottom:8px">
+    </div>
+    <button class="btn-gold" onclick="createAnnouncement()">📤 POST ANNOUNCEMENT</button>
+  </div>
+</div>
+
+<script>
+function switchTab(n, btn) {
+  document.querySelectorAll('.tab-sec').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.atab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');
+  btn.classList.add('active');
+  if (n === 'announcements') loadAnnouncements();
+  if (n === 'results') loadMatchResults();
+  if (n === 'referrals') loadReferralCashbacks();
+  if (n === 'notify') loadNtfTournaments();
+}
+
+// ===== EXPORT WHATSAPP NUMBERS FOR WASENDER =====
+function normalizeWA(raw) {
+  let num = (raw || '').replace(/\D/g, '').trim();
+  if (!num) return '';
+  if (num.startsWith('0')) num = '92' + num.slice(1);
+  if (!num.startsWith('92')) num = '92' + num;
+  return num.length >= 11 ? num : '';
+}
+
+async function exportWhatsAppNumbers() {
+  try {
+    showToast('⏳ Tournaments load ho rahe hain...');
+    const tSnap = await window._getDocs(window._collection(window._db, 'tournaments'));
+    const tOpts = [];
+    tSnap.forEach(d => {
+      const t = d.data();
+      tOpts.push(`<option value="${d.id}">${t.name || 'Untitled'}</option>`);
+    });
+
+    const modal = document.createElement('div');
+    modal.id = 'export-choice-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML = `
+      <div style="background:#1a1a2e;border:1px solid #333;border-radius:16px;padding:24px;max-width:420px;width:100%">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="color:#25D366;margin:0">📋 Export Numbers</h3>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+        </div>
+        <button class="abtn" style="width:100%;background:#25D366;color:#fff;margin-bottom:10px;padding:12px" onclick="document.getElementById('export-choice-modal').remove();exportAllNumbers()">
+          📤 Export All Players
+        </button>
+        <div style="border-top:1px solid #333;margin:14px 0;padding-top:14px">
+          <p style="color:#aaa;font-size:13px;margin-bottom:8px">Ya sirf un players ko export karo jo neeche wale tournament mein <b>join nahi</b> kiye:</p>
+          <select id="export-tid-select" class="fi" style="width:100%;margin-bottom:10px;background:#0d0d1a;color:#fff;border:1px solid #333;border-radius:8px;padding:8px">
+            <option value="">-- Tournament Select Karo --</option>
+            ${tOpts.join('')}
+          </select>
+          <button class="abtn" style="width:100%;background:#e67e22;color:#fff;padding:12px" onclick="exportNonJoiners()">
+            📤 Export Non-Joiners
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+async function exportAllNumbers() {
+  try {
+    showToast('⏳ Numbers export ho rahe hain...');
+    const snap = await window._getDocs(window._collection(window._db, 'players'));
+    if (snap.empty) { showToast('❌ Koi player nahi mila!'); return; }
+
+    const numbers = [];
+    snap.forEach(d => {
+      const num = normalizeWA(d.data().whatsapp);
+      if (num) numbers.push(num);
+    });
+
+    finishExport(numbers, 'clutchzone_all_players');
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+async function exportNonJoiners() {
+  const sel = document.getElementById('export-tid-select');
+  const tid = sel ? sel.value : '';
+  if (!tid) { showToast('❌ Pehle tournament select karo!'); return; }
+
+  try {
+    showToast('⏳ Numbers export ho rahe hain...');
+    document.getElementById('export-choice-modal')?.remove();
+
+    // Numbers of players who already joined this tournament
+    const partsSnap = await window._getDocs(window._collection(window._db, 'tournaments', tid, 'participants'));
+    const joinedSet = new Set();
+    partsSnap.forEach(d => {
+      const num = normalizeWA(d.data().playerWhatsapp);
+      if (num) joinedSet.add(num);
+    });
+
+    // All players, minus the ones who joined
+    const pSnap = await window._getDocs(window._collection(window._db, 'players'));
+    if (pSnap.empty) { showToast('❌ Koi player nahi mila!'); return; }
+
+    const numbers = [];
+    pSnap.forEach(d => {
+      const num = normalizeWA(d.data().whatsapp);
+      if (num && !joinedSet.has(num)) numbers.push(num);
+    });
+
+    finishExport(numbers, 'clutchzone_non_joiners');
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+function finishExport(numbers, filePrefix) {
+  if (numbers.length === 0) {
+    showToast('❌ Koi number nahi mila export karne ke liye!');
+    return;
+  }
+
+  const csvContent = 'Phone\n' + numbers.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filePrefix + '_' + numbers.length + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:#1a1a2e;border:1px solid #333;border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="color:#25D366;margin:0">📱 ${numbers.length} Numbers Exported</h3>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <p style="color:#aaa;font-size:13px;margin-bottom:12px">CSV file download ho gayi. WASender mein import karo.<br>Ya neeche se copy karo:</p>
+      <textarea id="num-export-area" style="width:100%;height:180px;background:#0d0d1a;color:#25D366;border:1px solid #333;border-radius:8px;padding:10px;font-size:13px;resize:none">${numbers.join('\n')}</textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('num-export-area').value);this.textContent='✅ Copied!'" 
+          style="flex:1;background:#25D366;color:#fff;border:none;border-radius:8px;padding:10px;cursor:pointer;font-weight:700">
+          📋 Copy All Numbers
+        </button>
+      </div>
+      <p style="color:#666;font-size:11px;margin-top:10px">Total: ${numbers.length} numbers | WASender CSV format ready</p>
+    </div>`;
+  document.body.appendChild(modal);
+  showToast('✅ ' + numbers.length + ' numbers export ho gaye!');
+}
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function hideModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeOut(e,id) { if(e.target===e.currentTarget) hideModal(id); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function togglePollOptions() {
+  const isPoll = document.getElementById('ann-type').value === 'poll';
+  document.getElementById('poll-opts-section').style.display = isPoll ? 'block' : 'none';
+}
+async function createAnnouncement() {
+  const type = document.getElementById('ann-type').value;
+  const title = document.getElementById('ann-title').value.trim();
+  const body = document.getElementById('ann-body').value.trim();
+  const pinned = document.getElementById('ann-pinned').checked;
+  const emoji = document.getElementById('ann-emoji').value.trim() || (type === 'poll' ? '🔵' : type === 'update' ? '🟡' : '📢');
+
+  if (!title) { showToast("❌ Title required!"); return; }
+
+  let data = { type, title, message: body, emoji, pinned, createdAt: new Date().toISOString() };
+
+  if (type === 'poll') {
+    const opts = ['poll-opt-1','poll-opt-2','poll-opt-3','poll-opt-4']
+      .map(id => document.getElementById(id).value.trim()).filter(v => v);
+    if (opts.length < 2) { showToast("❌ Min 2 poll options required!"); return; }
+    data.options = opts;
+    data.votes = opts.map(() => 0);
+  }
+
+  try {
+    await window._addDoc(window._collection(window._db, 'announcements'), data);
+    showToast("✅ Announcement posted!");
+    hideModal('ann-modal');
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-body').value = '';
+    document.getElementById('ann-emoji').value = '';
+    document.getElementById('ann-pinned').checked = false;
+    ['poll-opt-1','poll-opt-2','poll-opt-3','poll-opt-4'].forEach(id => document.getElementById(id).value = '');
+    loadAnnouncements();
+  } catch(e) { showToast("❌ Error: " + e.message); }
+}
+async function loadAnnouncements() {
+  const list = document.getElementById('ann-admin-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dim)">Loading...</div>';
+  try {
+    const snap = await window._getDocs(window._collection(window._db, 'announcements'));
+    const docs = [];
+    snap.forEach(d => docs.push({id: d.id, ...d.data()}));
+    docs.sort((a,b) => (b.pinned?1:0) - (a.pinned?1:0) || b.createdAt?.localeCompare(a.createdAt||''));
+    if (docs.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dim)">No announcements yet.</div>'; return; }
+    list.innerHTML = '';
+    docs.forEach(a => {
+      const timeStr = a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-PK',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      const typeBadge = a.type === 'poll' ? '🔵 Poll' : a.type === 'update' ? '🟡 Update' : '🔴 Announcement';
+      let pollInfo = '';
+      if (a.type === 'poll' && a.options) {
+        const total = (a.votes||[]).reduce((s,v)=>s+(v||0),0);
+        pollInfo = '<div style="margin-top:8px;font-size:12px;color:var(--dim)">' +
+          a.options.map((o,i)=>`${o}: <strong>${a.votes?.[i]||0}</strong>`).join(' | ') +
+          ` | Total: <strong>${total}</strong></div>`;
+      }
+      list.innerHTML += `<div style="background:var(--card);border:1px solid ${a.pinned?'var(--gold)':'var(--border)'};border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--gold)">${a.emoji||'📢'} ${typeBadge} ${a.pinned?'📌':''}</span>
+          <span style="font-size:11px;color:var(--dim)">${timeStr}</span>
+        </div>
+        <div style="font-weight:700;margin-bottom:4px">${a.title}</div>
+        <div style="font-size:13px;color:var(--dim)">${a.message||''}</div>
+        ${pollInfo}
+        <button class="abtn" style="margin-top:10px;background:#c0392b;color:#fff" onclick="deleteAnnouncement('${a.id}')">🗑️ Delete</button>
+      </div>`;
+    });
+  } catch(e) { list.innerHTML = `<div style="color:red">❌ Error: ${e.message}</div>`; }
+}
+  // ===== PRIZE DISTRIBUTION =====
+  let _prizeTid = '', _prizeKillRate = 20;
+
+  window.openPrizeModal = async (tid) => {
+    const t = window.allTournaments.find(x => x.id === tid);
+    if (!t) return;
+    _prizeTid = tid;
+
+    // Prizes — dynamic list from `prizes` array, fallback to legacy prize1/2/3
+    const prizes = (Array.isArray(t.prizes) && t.prizes.length) ? t.prizes.filter((v,i)=> i===0 || v) : [t.prize1||600, t.prize2||400, t.prize3||200];
+    const killOn = t.killEnabled !== undefined ? !!t.killEnabled : (t.killPrize||0) > 0;
+    _prizeKillRate = killOn ? (parseInt(t.killPrize) || 0) : 0;
+
+    document.getElementById('prize-t-name').textContent = '🏆 ' + (t.name||'');
+    document.getElementById('prize-kill-rate').textContent = _prizeKillRate;
+    document.getElementById('kill-bonus-list').innerHTML = '';
+    document.getElementById('kill-bonus-section').style.display = _prizeKillRate > 0 ? '' : 'none';
+
+    // Build winner rows dynamically (1 per prize position)
+    const medals = ['🥇','🥈','🥉'];
+    const posName = i => i===0?'1st':i===1?'2nd':i===2?'3rd':((i+1)+'th');
+    const winnersList = document.getElementById('prize-winners-list');
+    winnersList.innerHTML = prizes.map((amt, i) => `
+      <div class="fg">
+        <label class="fl">${medals[i]||'🏅'} ${posName(i)} Place — Player UID</label>
+        <select class="fi" id="prize-uid${i+1}"><option value="">⏳ Loading players...</option></select>
+        <div style="font-size:12px;color:var(--gold);margin-top:4px">Prize: Rs <span id="prize-amt${i+1}">${amt}</span></div>
+      </div>`).join('');
+
+    // Helper: replace element with input or select
+    function setPlayerField(elId, optHtml) {
+      const existing = document.getElementById(elId);
+      if (!existing) return;
+      if (optHtml) {
+        const sel = document.createElement('select');
+        sel.className = 'fi';
+        sel.id = elId;
+        sel.innerHTML = optHtml;
+        existing.parentNode.replaceChild(sel, existing);
+      } else {
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'fi';
+        inp.id = elId;
+        inp.placeholder = 'Enter Player UID manually';
+        inp.value = '';
+        existing.parentNode.replaceChild(inp, existing);
+      }
+    }
+
+    showModal('prize-modal');
+
+    // Then load participants async
+    try {
+      const snap = await window._getDocs(window._collection(window._db, 'tournaments', tid, 'participants'));
+      const ids = prizes.map((_, i) => 'prize-uid' + (i+1));
+      if (snap.empty) {
+        ids.forEach(elId => setPlayerField(elId, null));
+        ids.forEach(elId => { const el = document.getElementById(elId); if (el) el.placeholder = 'No joined players found — enter UID manually'; });
+        showToast('⚠️ Koi joined player nahi mila. UID manually type karo.');
+        return;
+      }
+      const opts = ['<option value="">-- Select Player --</option>'];
+      snap.forEach(d => {
+        const p = d.data();
+        opts.push(`<option value="${p.playerUID}">${p.playerName} — ${p.playerUID}</option>`);
+      });
+      const optHtml = opts.join('');
+      ids.forEach(elId => setPlayerField(elId, optHtml));
+    } catch(e) {
+      const ids = prizes.map((_, i) => 'prize-uid' + (i+1));
+      ids.forEach(elId => setPlayerField(elId, null));
+      ids.forEach(elId => { const el = document.getElementById(elId); if (el) el.placeholder = 'Error loading — enter UID manually'; });
+      showToast('⚠️ Players load nahi hue: ' + e.message);
+    }
+  };
+
+  window.addKillRow = () => {
+    const killList = document.getElementById('kill-bonus-list');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+    row.innerHTML = `
+      <input type="text" class="fi" placeholder="Player UID" style="flex:2">
+      <input type="number" class="fi" placeholder="Kills" min="1" style="flex:1">
+      <button class="abtn red-btn" style="padding:8px 10px" onclick="this.parentElement.remove()">✕</button>`;
+    killList.appendChild(row);
+  };
+
+  window.distributeAllPrizes = async () => {
+    const medals = ['🥇','🥈','🥉'];
+    const posName = i => i===0?'1st':i===1?'2nd':i===2?'3rd':((i+1)+'th');
+    const winnerRows = document.querySelectorAll('#prize-winners-list .fg');
+
+    const prizes = [];
+    winnerRows.forEach((row, i) => {
+      const uidEl = document.getElementById('prize-uid' + (i+1));
+      const amtEl = document.getElementById('prize-amt' + (i+1));
+      if (!uidEl || !amtEl) return;
+      const uid = uidEl.value.trim();
+      const amt = parseInt(amtEl.textContent) || 0;
+      if (uid && amt > 0) {
+        prizes.push({ uid, amt, label: `${medals[i]||'🏅'} ${posName(i)} Place Prize`, type: 'prize', isFirst: i===0 });
+      }
+    });
+
+    if (!prizes.length) {
+      showToast("❌ Kam az kam 1st place UID daalo!");
+      return;
+    }
+
+    const btn = document.querySelector('#prize-modal .btn-gold');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Distributing...'; }
+
+    try {
+      // Get all players to match UID → Firebase UID
+      const playersSnap = await window._getDocs(window._collection(window._db, 'players'));
+      const playerMap = {};
+      playersSnap.forEach(d => { playerMap[d.data().gameUID] = { id: d.id, ...d.data() }; });
+
+      // Kill bonuses (only relevant if this tournament has kill reward enabled)
+      const killRows = document.querySelectorAll('#kill-bonus-list > div');
+      killRows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const uid = inputs[0].value.trim();
+        const kills = parseInt(inputs[1].value) || 0;
+        if (uid && kills > 0 && _prizeKillRate > 0) {
+          prizes.push({ uid, amt: kills * _prizeKillRate, kills, label: '💀 Kill Bonus ('+kills+' kills)', type: 'kill_prize', isFirst: false });
+        }
+      });
+
+     let success = 0, failed = [];
+      for (const p of prizes) {
+        const player = playerMap[p.uid];
+        if (!player) { failed.push(p.uid + ' (not found)'); continue; }
+        const updateData = {
+  walletBalance: window._increment(p.amt),
+  totalEarnings: window._increment(p.amt)
+};
+if (p.isFirst) {
+  updateData.tournamentsWon = window._increment(1);
+}
+if (p.type === 'kill_prize' && p.kills) {
+  updateData.totalKills = window._increment(p.kills);
+}
+await window._updateDoc(window._doc(window._db, 'players', player.id), updateData);
+        await window._addDoc(window._collection(window._db, 'players', player.id, 'transactions'), {
+          type: p.type,
+          description: p.label,
+          amount: p.amt,
+          tournamentId: _prizeTid,
+          createdAt: new Date().toISOString()
+        });
+       window._sendPush(player.id, '🏆 You Won a Prize!', `${p.label}: Rs ${p.amt} added to your wallet`, '/wallet');
+        success++;
+      }
+
+      hideModal('prize-modal');
+      let msg = '✅ ' + success + ' prizes distributed!';
+      if (failed.length) msg += ' ❌ Not found: ' + failed.join(', ');
+      showToast(msg);
+
+      // BUG FIX 11: Clear this tournament from all participants (multi-join aware) so it no longer shows as active
+      try {
+        const partsSnap = await window._getDocs(window._collection(window._db, 'tournaments', _prizeTid, 'participants'));
+        const clearBatch = [];
+        partsSnap.forEach(d => {
+          const pUID = d.data().playerUID;
+          const player = playerMap[pUID];
+          if (player) {
+            clearBatch.push(window._updateDoc(window._doc(window._db, 'players', player.id), {
+              activeTournament: null,
+              activeTournamentName: null,
+              activeTournaments: window._arrayRemove(_prizeTid)
+            }));
+          }
+        });
+        if (clearBatch.length > 0) await Promise.all(clearBatch);
+      } catch(e) { console.warn('Could not clear activeTournament after prizes:', e.message); }
+
+      await loadAll();
+    } catch(e) {
+      showToast('❌ Error: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🏆 DISTRIBUTE ALL PRIZES'; }
+    }
+  };
+
+async function deleteAnnouncement(id) {
+  if (!confirm("Delete this announcement?")) return;
+  try {
+    await window._deleteDoc(window._doc(window._db, 'announcements', id));
+    showToast("✅ Deleted!");
+    loadAnnouncements();
+  } catch(e) { showToast("❌ Error: " + e.message); }
+}
+
+// ===== MATCH RESULTS =====
+let _resExtraCount = 0;
+function resPosLabel(i) { return i===1?'1ST':i===2?'2ND':i===3?'3RD':(i+'TH'); }
+function resPosColor(i) { return i===1?'var(--gold)':i===2?'#C0C0C0':i===3?'#CD7F32':'var(--dim)'; }
+function resPosMedal(i) { return i===1?'🥇':i===2?'🥈':i===3?'🥉':'🏅'; }
+
+window.addResultWinner = () => {
+  const pos = 4 + _resExtraCount;
+  _resExtraCount++;
+  const wrap = document.getElementById('res-extra-winners');
+  const block = document.createElement('div');
+  block.className = 'res-extra-block';
+  block.style.cssText = 'background:var(--dark4);border-radius:10px;padding:14px;margin-bottom:10px';
+  block.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;color:${resPosColor(pos)};font-weight:700">${resPosMedal(pos)} ${resPosLabel(pos)} PLACE</div>
+      <button type="button" class="abtn red-btn" style="padding:4px 10px" onclick="this.closest('.res-extra-block').remove()">✕</button>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">Player Name</label><input type="text" class="fi res-extra-name" placeholder="In-Game Name"></div>
+      <div class="fg"><label class="fl">Game UID</label><input type="text" class="fi res-extra-uid" placeholder="UID"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">Prize (Rs)</label><input type="number" class="fi res-extra-prize" placeholder="0" value="0"></div>
+      <div class="fg"><label class="fl">Kills</label><input type="number" class="fi res-extra-kills" placeholder="0" min="0"></div>
+    </div>`;
+  block.dataset.pos = pos;
+  wrap.appendChild(block);
+};
+
+async function postMatchResult() {
+  const tname = document.getElementById('res-tname').value.trim();
+  if (!tname) { showToast("❌ Tournament name likho!"); return; }
+
+  const n1 = document.getElementById('res-name1').value.trim();
+  const u1 = document.getElementById('res-uid1').value.trim();
+  if (!n1 || !u1) { showToast("❌ 1st place winner zaroor bharo!"); return; }
+
+  const winners = [];
+  const placements = [
+    { pos:1, nameId:'res-name1', uidId:'res-uid1', prizeId:'res-prize1', killsId:'res-kills1' },
+    { pos:2, nameId:'res-name2', uidId:'res-uid2', prizeId:'res-prize2', killsId:'res-kills2' },
+    { pos:3, nameId:'res-name3', uidId:'res-uid3', prizeId:'res-prize3', killsId:'res-kills3' },
+  ];
+  placements.forEach(p => {
+    const name = document.getElementById(p.nameId).value.trim();
+    const uid  = document.getElementById(p.uidId).value.trim();
+    const prize= parseInt(document.getElementById(p.prizeId).value) || 0;
+    const kills= parseInt(document.getElementById(p.killsId).value) || 0;
+    if (name && uid) winners.push({ position:p.pos, name, uid, prize, kills });
+  });
+
+  // Extra winners (4th, 5th... added via + button, e.g. for Clash Squad tournaments)
+  document.querySelectorAll('#res-extra-winners .res-extra-block').forEach(block => {
+    const pos = parseInt(block.dataset.pos) || (winners.length + 1);
+    const name = block.querySelector('.res-extra-name').value.trim();
+    const uid  = block.querySelector('.res-extra-uid').value.trim();
+    const prize= parseInt(block.querySelector('.res-extra-prize').value) || 0;
+    const kills= parseInt(block.querySelector('.res-extra-kills').value) || 0;
+    if (name && uid) winners.push({ position: pos, name, uid, prize, kills });
+  });
+
+  const fragName  = document.getElementById('res-frag-name').value.trim();
+  const fragKills = parseInt(document.getElementById('res-frag-kills').value) || 0;
+  const totalPlayers = parseInt(document.getElementById('res-total-players').value) || 0;
+  const totalPrize   = parseInt(document.getElementById('res-total-prize').value) || 0;
+
+  const data = {
+    tournamentName: tname,
+    winners,
+    totalPlayers,
+    totalPrize,
+    completedAt: new Date().toISOString()
+  };
+  if (fragName && fragKills) data.topKiller = { name: fragName, kills: fragKills };
+
+  const btn = document.querySelector('#result-modal .btn-gold');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
+  try {
+    await window._addDoc(window._collection(window._db, 'matchResults'), data);
+    showToast("✅ Match result posted!");
+    hideModal('result-modal');
+    // Clear fields
+    ['res-tname','res-name1','res-uid1','res-kills1','res-name2','res-uid2','res-kills2',
+     'res-name3','res-uid3','res-kills3','res-frag-name','res-frag-kills',
+     'res-total-players','res-total-prize'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('res-prize1').value = '600';
+    document.getElementById('res-prize2').value = '400';
+    document.getElementById('res-prize3').value = '200';
+    document.getElementById('res-extra-winners').innerHTML = '';
+    _resExtraCount = 0;
+    loadMatchResults();
+  } catch(e) { showToast("❌ Error: " + e.message); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '📤 POST MATCH RESULT'; } }
+}
+
+async function loadMatchResults() {
+  const list = document.getElementById('results-admin-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--dim)">Loading...</div>';
+  try {
+    const snap = await window._getDocs(window._collection(window._db, 'matchResults'));
+    const docs = [];
+    snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
+    if (!docs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--dim)">Koi result post nahi kiya abhi.</div>';
+      return;
+    }
+    list.innerHTML = docs.map(r => {
+      const date = r.completedAt ? new Date(r.completedAt).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      const winners = (r.winners||[]).map(w =>
+        `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          ${w.position===1?'🥇':w.position===2?'🥈':w.position===3?'🥉':'🏅'} <strong>${w.name}</strong> <span style="color:var(--dim);font-size:11px">(${w.uid})</span>
+          <span style="color:var(--gold);float:right">Rs ${(w.prize||0).toLocaleString()}${w.kills?` • 💀${w.kills}`:''}</span>
+        </div>`).join('');
+      return `<div style="background:var(--dark3);border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase">${r.tournamentName||'Tournament'}</div>
+            <div style="font-size:11px;color:var(--dim)">📅 ${date}${r.totalPlayers?` • 👥 ${r.totalPlayers} players`:''}</div>
+          </div>
+          <span style="background:rgba(46,204,113,0.12);color:var(--green);border:1px solid rgba(46,204,113,0.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700">✅ Posted</span>
+        </div>
+        <div style="margin-bottom:10px">${winners}</div>
+        ${r.topKiller?`<div style="font-size:12px;color:var(--dim);padding:6px 0">💀 Top Fragger: <strong style="color:var(--red)">${r.topKiller.name} — ${r.topKiller.kills} kills</strong></div>`:''}
+        <button class="abtn red-btn" style="margin-top:8px" onclick="deleteResult('${r.id}')">🗑️ Delete</button>
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML = `<div style="color:red">❌ Error: ${e.message}</div>`; }
+}
+
+async function deleteResult(id) {
+  if (!confirm("Delete this match result?")) return;
+  try {
+    await window._deleteDoc(window._doc(window._db, 'matchResults', id));
+    showToast("✅ Result deleted!");
+    loadMatchResults();
+  } catch(e) { showToast("❌ Error: " + e.message); }
+}
+
+// ===== BROADCAST / MANUAL PUSH NOTIFICATIONS =====
+function onNtfTargetChange() {
+  const target = document.getElementById('ntf-target').value;
+  document.getElementById('ntf-tournament-wrap').style.display = (target === 'all') ? 'none' : 'block';
+}
+
+async function loadNtfTournaments() {
+  try {
+    const sel = document.getElementById('ntf-tid');
+    const tSnap = await window._getDocs(window._collection(window._db, 'tournaments'));
+    const opts = ['<option value="">-- Tournament Select Karo --</option>'];
+    tSnap.forEach(d => {
+      const t = d.data();
+      opts.push(`<option value="${d.id}">${t.name || 'Untitled'}</option>`);
+    });
+    sel.innerHTML = opts.join('');
+  } catch(e) {
+    console.warn('Could not load tournaments for notify tab:', e.message);
+  }
+}
+
+async function sendBroadcastNotification() {
+  const title = document.getElementById('ntf-title').value.trim();
+  const body = document.getElementById('ntf-body').value.trim();
+  const target = document.getElementById('ntf-target').value;
+  const resultBox = document.getElementById('ntf-result');
+  const btn = document.getElementById('ntf-send-btn');
+
+  if (!title || !body) { showToast('❌ Title aur message dono likho!'); return; }
+
+  let tid = '';
+  if (target !== 'all') {
+    tid = document.getElementById('ntf-tid').value;
+    if (!tid) { showToast('❌ Pehle tournament select karo!'); return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+  resultBox.textContent = '';
+
+  try {
+    // Get all players
+    const pSnap = await window._getDocs(window._collection(window._db, 'players'));
+    let allPlayers = [];
+    pSnap.forEach(d => allPlayers.push({ id: d.id, ...d.data() }));
+
+    let targetPlayers = allPlayers;
+
+    if (target !== 'all') {
+      // Get participant UIDs for the selected tournament
+      const partSnap = await window._getDocs(window._collection(window._db, 'tournaments', tid, 'participants'));
+      const joinedUIDs = new Set();
+      partSnap.forEach(d => joinedUIDs.add(d.data().playerUID));
+
+      if (target === 'joiners') {
+        targetPlayers = allPlayers.filter(p => joinedUIDs.has(p.gameUID));
+      } else { // nonjoiners
+        targetPlayers = allPlayers.filter(p => !joinedUIDs.has(p.gameUID));
+      }
+    }
+
+    const tokens = targetPlayers.map(p => p.fcmToken).filter(Boolean);
+
+    if (tokens.length === 0) {
+      showToast('⚠️ Koi player mila jinke paas notification token ho!');
+      resultBox.textContent = `Target players: ${targetPlayers.length}, but 0 have notifications enabled.`;
+      return;
+    }
+
+    const res = await fetch(window._notifyWorkerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': window._notifyAdminSecret },
+      body: JSON.stringify({ tokens, title, body, url: '/' })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      showToast(`✅ Notification bhej di! ${data.sent} sent, ${data.failed} failed.`);
+      let detail = `Target players: ${targetPlayers.length} | Tokens found: ${tokens.length} | Sent: ${data.sent} | Failed: ${data.failed}`;
+      if (data.failures && data.failures.length) {
+        detail += `<br><br><strong style="color:var(--red)">Failure details:</strong><br>` +
+          data.failures.map(f => `<div style="margin-top:4px;word-break:break-all">${f}</div>`).join('');
+      }
+      resultBox.innerHTML = detail;
+    } else {
+      showToast('❌ Error: ' + (data.error || 'Unknown'));
+      resultBox.textContent = 'Error: ' + (data.error || JSON.stringify(data));
+    }
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+    resultBox.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔔 SEND NOTIFICATION';
+  }
+}
+
+</script>
+</body>
+</html>
