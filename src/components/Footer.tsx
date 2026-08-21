@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
           </a>
 
           <a
-            href="https://www.facebook.com/profile.php?id=61578776249560"
+            href="https://www.facebook.com/profile.php?id=61593588745864"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#4A9EFF]/10 text-[#4A9EFF] border border-[#4A9EFF]/30 text-xs font-tech font-bold uppercase hover:bg-[#4A9EFF]/20 transition-colors"
