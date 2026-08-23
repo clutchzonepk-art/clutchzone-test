@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { PaymentMethod } from '../../types';
-import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { OWNER_WHATSAPP } from '../../firebase';
+import { ShieldAlert, CheckCircle2, MessageCircle } from 'lucide-react';
 
 export const SetupProfileModal: React.FC = () => {
   const { activeModal, closeModal, submitProfileSetup, showToast } = useAuth();
@@ -181,6 +182,18 @@ export const SetupProfileModal: React.FC = () => {
               >
                 {loading ? '⏳ CREATING PROFILE...' : '✅ CREATE MY PROFILE & PLAY'}
               </button>
+            </div>
+
+            <div className="pt-1 text-center">
+              <a
+                href={`https://wa.me/${OWNER_WHATSAPP}?text=${encodeURIComponent('Hi, I am facing a problem while creating my profile on ClutchZone.')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-tech font-bold uppercase text-[#2ECC71] hover:text-[#4ade80] transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Problem during profile creation? Click Customer Support
+              </a>
             </div>
           </form>
         </div>
