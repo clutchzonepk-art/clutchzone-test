@@ -9,9 +9,14 @@ export const JoinConfirmModal: React.FC = () => {
   if (activeModal !== 'joinConfirm') return null;
 
   const { tournamentId = '', tournamentName = '', entryFee = 70 } = modalData || {};
-  const currentBalance = profile?.walletBalance || 0;
+  const bonusBalance = profile?.bonusBalance || 0;
+  const walletBalance = profile?.walletBalance || 0;
+  const currentBalance = bonusBalance + walletBalance;
   const balanceAfter = currentBalance - entryFee;
   const hasSufficientBalance = currentBalance >= entryFee;
+
+  const bonusUsed = Math.min(bonusBalance, entryFee);
+  const walletUsed = Math.max(0, entryFee - bonusUsed);
 
   const handleConfirm = async () => {
     if (!hasSufficientBalance) {
@@ -61,8 +66,21 @@ export const JoinConfirmModal: React.FC = () => {
               <span className="font-heading font-black text-sm text-[#E74C3C]">-Rs {entryFee}</span>
             </div>
 
+            {hasSufficientBalance && bonusUsed > 0 && (
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-[#7A84A8] pl-2">↳ From Bonus Wallet</span>
+                <span className="font-tech text-[#2ECC71]">Rs {bonusUsed}</span>
+              </div>
+            )}
+            {hasSufficientBalance && walletUsed > 0 && (
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-[#7A84A8] pl-2">↳ From Wallet Balance</span>
+                <span className="font-tech text-[#F5A623]">Rs {walletUsed}</span>
+              </div>
+            )}
+
             <div className="flex justify-between items-center">
-              <span className="text-[#7A84A8]">Your Current Balance:</span>
+              <span className="text-[#7A84A8]">Total Available (Bonus + Wallet):</span>
               <span className="font-heading font-black text-sm text-[#F5A623]">
                 Rs {currentBalance.toLocaleString()}
               </span>
