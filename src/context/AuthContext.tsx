@@ -437,9 +437,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const currentBalance = profile.walletBalance || 0;
-    if (currentBalance < entryFee) {
-      showToast(`❌ Insufficient balance! Entry fee is Rs ${entryFee}, your balance is Rs ${currentBalance}. Please deposit first.`, 'error');
+    const bonusBal = profile.bonusBalance || 0;
+    const walletBal = profile.walletBalance || 0;
+    const totalAvailable = bonusBal + walletBal;
+
+    if (totalAvailable < entryFee) {
+      showToast(`❌ Insufficient balance! Entry fee is Rs ${entryFee}, your balance is Rs ${totalAvailable}. Please deposit first.`, 'error');
       openModal('deposit');
       return false;
     }
@@ -450,37 +453,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
 
+    // Bonus wallet is used first, withdrawable wallet covers the rest.
+    const bonusUsed = Math.min(bonusBal, entryFee);
+    const walletUsed = entryFee - bonusUsed;
+
+    const referrerId = profile.referredBy || null;
+    const isFirstJoin = !profile.firstTournamentJoined;
+    const referrerEligible = !!referrerId && entryFee >= 60;
+    const referrerBonusAmt = isFirstJoin ? 20 : 10;
+
     try {
       try {
         const playerRef = doc(db, 'players', currentUser.uid);
         const tournRef = doc(db, 'tournaments', tournamentId);
+        const referrerRef = referrerEligible ? doc(db, 'players', referrerId as string) : null;
 
         await runTransaction(db, async (t) => {
           const pSnap = await t.get(playerRef);
           const tSnap = await t.get(tournRef);
 
           if (pSnap.exists()) {
-            const freshBal = pSnap.data().walletBalance || 0;
-            if (freshBal < entryFee) throw new Error('INSUFFICIENT_BALANCE');
-            t.update(playerRef, {
-              walletBalance: freshBal - entryFee,
+            const freshBonus = pSnap.data().bonusBalance || 0;
+            const freshWallet = pSnap.data().walletBalance || 0;
+            const freshTotal = freshBonus + freshWallet;
+            if (freshTotal < entryFee) throw new Error('INSUFFICIENT_BALANCE');
+
+            const freshBonusUsed = Math.min(freshBonus, entryFee);
+            const freshWalletUsed = entryFee - freshBonusUsed;
+
+            const playerUpdate: any = {
+              bonusBalance: freshBonus - freshBonusUsed,
+              walletBalance: freshWallet - freshWalletUsed,
               tournamentsPlayed: increment(1),
               activeTournaments: arrayUnion(tournamentId)
-            });
+            };
+            if (referrerEligible && !pSnap.data().firstTournamentJoined) {
+              playerUpdate.firstTournamentJoined = true;
+            }
+            t.update(playerRef, playerUpdate);
           }
           if (tSnap.exists()) {
             t.update(tournRef, { joinedCount: increment(1) });
           }
+          if (referrerRef) {
+            t.update(referrerRef, { bonusBalance: increment(referrerBonusAmt) });
+          }
         });
 
-        // Add transaction doc
+        // Entry fee transaction log (own history)
+        let note = '';
+        if (bonusUsed > 0 && walletUsed > 0) note = `${bonusUsed} bonus - ${walletUsed} wallet`;
+        else if (bonusUsed > 0) note = `${bonusUsed} bonus`;
+        else note = `${walletUsed} wallet`;
+
         await addDoc(collection(db, 'players', currentUser.uid, 'transactions'), {
           type: 'entry_fee',
           tournamentId,
           description: `Entry Fee - ${tournamentName}`,
           amount: -entryFee,
+          note,
           createdAt: new Date().toISOString()
         });
+
+        // Referral bonus transaction log (goes into the REFERRER's history, not shown to joining player)
+        if (referrerEligible && referrerId) {
+          await addDoc(collection(db, 'players', referrerId, 'transactions'), {
+            type: 'referral_bonus',
+            description: `Tournament joined by - ${profile.name}`,
+            amount: referrerBonusAmt,
+            createdAt: new Date().toISOString()
+          });
+        }
 
         // Add participant doc
         await addDoc(collection(db, 'tournaments', tournamentId, 'participants'), {
@@ -498,9 +541,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!prev) return null;
         return {
           ...prev,
-          walletBalance: (prev.walletBalance || 0) - entryFee,
+          bonusBalance: Math.max(0, (prev.bonusBalance || 0) - bonusUsed),
+          walletBalance: (prev.walletBalance || 0) - walletUsed,
           tournamentsPlayed: (prev.tournamentsPlayed || 0) + 1,
-          activeTournaments: [...(prev.activeTournaments || []), tournamentId]
+          activeTournaments: [...(prev.activeTournaments || []), tournamentId],
+          firstTournamentJoined: referrerEligible ? true : prev.firstTournamentJoined
         };
       });
 
@@ -508,12 +553,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         prev.map(t => (t.id === tournamentId ? { ...t, joinedCount: t.joinedCount + 1 } : t))
       );
 
+      let txNote = '';
+      if (bonusUsed > 0 && walletUsed > 0) txNote = `${bonusUsed} bonus - ${walletUsed} wallet`;
+      else if (bonusUsed > 0) txNote = `${bonusUsed} bonus`;
+      else txNote = `${walletUsed} wallet`;
+
       const newTx: Transaction = {
         id: `tx-${Date.now()}`,
         type: 'entry_fee',
         tournamentId,
         description: `Entry Fee - ${tournamentName}`,
         amount: -entryFee,
+        note: txNote,
         createdAt: new Date().toISOString()
       };
       setTransactions(prev => [newTx, ...prev]);
