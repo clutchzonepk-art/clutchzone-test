@@ -23,22 +23,38 @@ export const HomeTab: React.FC = () => {
 
   const faqs = [
     {
-      q: "How can I earn real money by playing Free Fire?",
-      a: "Join ClutchZone Free Fire tournaments by paying a small entry fee (starting at Rs 70). You earn Rs 20 per kill in every match, plus up to Rs 600 for 1st place! You can withdraw your winnings to JazzCash or EasyPaisa anytime once your balance reaches Rs 100."
-    },
-    {
-      q: "How do I get the Custom Room ID & Password?",
-      a: "15 minutes before the match start time, our automated system sends the Room ID and Password directly to your registered WhatsApp number. You enter the room in the Free Fire app and get ready to drop in!"
-    },
-    {
-      q: "When and how are prizes distributed?",
-      a: "Prizes and kill earnings are verified by our match referee team and credited to your ClutchZone wallet within 1-2 hours after the match finishes. You can withdraw anytime 24/7."
-    },
-    {
-      q: "What payment methods are supported in Pakistan?",
-      a: "We support JazzCash, EasyPaisa, and direct bank transfers. Deposits are approved within minutes, and withdrawal requests are processed safely within 24 hours."
-    }
-  ];
+    q: "How can I earn real money by playing Free Fire?",
+    a: "Join any ClutchZone tournament — Solo, Duo, Squad, Clash Squad, or Battle Royale — with entry fees starting from Rs 50. Each tournament has its own guaranteed prize pool (shown on the tournament card before you join) and some tournaments also pay a kill bonus per elimination. Winnings go straight into your ClutchZone wallet and can be withdrawn to JazzCash or EasyPaisa once your balance reaches Rs 100."
+  },
+  {
+    q: "What tournament modes are available?",
+    a: "We regularly run Solo, Duo, Squad, and Clash Squad matches, plus Battle Royale Classic and Lite lobbies with bigger slot counts. Entry fee, kill bonus, and prize pool are different for every tournament — check the details on each tournament card before joining."
+  },
+  {
+    q: "How do I get the Custom Room ID & Password?",
+    a: "15 minutes before the match start time, our automated system sends the Room ID and Password directly to your registered WhatsApp number. You enter the room in the Free Fire app and get ready to drop in!"
+  },
+  {
+    q: "When and how are prizes distributed?",
+    a: "Prizes and kill earnings are verified by our match referee team and credited to your ClutchZone wallet within 1-2 hours after the match finishes. You can withdraw anytime 24/7 (recommended time 8AM-5PM)"
+  },
+  {
+    q: "What payment methods are supported in Pakistan?",
+    a: "We support JazzCash, EasyPaisa, and direct bank transfers. Deposits are approved within minutes, and withdrawal requests are processed safely within 24 hours."
+  },
+  {
+    q: "How does the Referral Program work?",
+    a: "Every player gets a unique referral code (find it in your Wallet, under Bonus Wallet). Share it with friends — when they sign up using your code, they instantly get Rs 20. When they join their first paid tournament (entry fee Rs 60 or more), you get Rs 20. Every time after that when they join a tournament with entry fee Rs 60+, you get Rs 10. There's no limit on how many friends you can refer!"
+  },
+  {
+    q: "Can I withdraw my referral bonus?",
+    a: "No. Referral bonuses (signup bonus and referral earnings) go into a separate Bonus Wallet and can only be used to pay tournament entry fees — they cannot be withdrawn as cash. Your regular wallet balance (deposits and tournament winnings) remains fully withdrawable as usual."
+  },
+  {
+    q: "I'm having trouble creating my account or joining a match. Who do I contact?",
+    a: "Tap the Customer Support button (available on the profile setup screen and in the app menu) to message us directly on WhatsApp, or submit a support ticket from the app. We usually respond within a few hours."
+  }
+];
 
   return (
     <div className="space-y-6 pb-8">
