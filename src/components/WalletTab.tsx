@@ -288,6 +288,11 @@ export const WalletTab: React.FC = () => {
                       <div className="text-[11px] text-[#7A84A8]">
                         {formatTimestamp(tx.createdAt || tx.timestamp)}
                       </div>
+                      {tx.note && (
+                        <div className="text-[10px] text-[#7A84A8] mt-0.5">
+                          {tx.note}
+                        </div>
+                      )}
                     </div>
                   </div>
 
