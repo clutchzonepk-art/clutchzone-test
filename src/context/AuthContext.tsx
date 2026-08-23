@@ -195,7 +195,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const docRef = doc(db, 'players', user.uid);
           const snap = await getDoc(docRef);
           if (snap.exists()) {
-            setProfile(snap.data() as PlayerProfile);
+            const existingProfile = snap.data() as PlayerProfile;
+            if (!existingProfile.referralCode) {
+              // Old player from before the referral system existed — generate their code now.
+              try {
+                const code = await generateUniqueReferralCode(existingProfile.name || 'CLTZ');
+                await updateDoc(docRef, {
+                  referralCode: code,
+                  referredPlayers: existingProfile.referredPlayers || [],
+                  bonusBalance: existingProfile.bonusBalance || 0,
+                  firstTournamentJoined: existingProfile.firstTournamentJoined || false
+                });
+                existingProfile.referralCode = code;
+                existingProfile.referredPlayers = existingProfile.referredPlayers || [];
+                existingProfile.bonusBalance = existingProfile.bonusBalance || 0;
+                existingProfile.firstTournamentJoined = existingProfile.firstTournamentJoined || false;
+              } catch {
+                // If this fails (e.g. offline), the player just won't see a code yet — no crash.
+              }
+            }
+            setProfile(existingProfile);
             await fetchTransactions(user.uid);
           } else {
             // New user needs profile setup
