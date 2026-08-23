@@ -55,6 +55,7 @@ export interface Transaction {
   tournamentId?: string;
   description: string;
   amount: number;
+  note?: string;
   createdAt?: string | { toDate?: () => Date; seconds?: number };
   timestamp?: { toDate?: () => Date; seconds?: number };
 }
