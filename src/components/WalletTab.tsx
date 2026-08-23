@@ -11,15 +11,19 @@ import {
   XCircle, 
   AlertCircle,
   HelpCircle,
-  Skull
+  Skull,
+  Gift,
+  Users
 } from 'lucide-react';
 import { formatTimestamp } from '../firebase';
 
 export const WalletTab: React.FC = () => {
   const { profile, transactions, openModal } = useAuth();
-  const [txFilter, setTxFilter] = useState<'all' | 'deposits' | 'prizes' | 'withdrawals'>('all');
+  const [txFilter, setTxFilter] = useState<'all' | 'deposits' | 'prizes' | 'withdrawals' | 'referrals'>('all');
 
   const balance = profile?.walletBalance || 0;
+  const bonusBalance = profile?.bonusBalance || 0;
+  const referredPlayers = profile?.referredPlayers || [];
 
   // Calculate totals from transactions
   let totalDeposited = 0;
@@ -39,6 +43,7 @@ export const WalletTab: React.FC = () => {
     if (txFilter === 'deposits') return tx.type === 'deposit';
     if (txFilter === 'prizes') return tx.type === 'prize' || tx.type === 'kill_prize';
     if (txFilter === 'withdrawals') return tx.type.startsWith('withdrawal');
+    if (txFilter === 'referrals') return tx.type === 'referral_bonus';
     return true;
         })
   .sort((a, b) => {
@@ -93,6 +98,51 @@ export const WalletTab: React.FC = () => {
               <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
               <span>Withdraw Cash</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bonus Wallet Card */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#161A2E] via-[#1A2A22] to-[#0F1220] border border-[#2ECC71]/30 p-5 sm:p-6 shadow-xl">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-xs uppercase font-tech font-bold tracking-wider text-[#7A84A8] flex items-center gap-1.5">
+            <Gift className="w-4 h-4 text-[#2ECC71]" /> Bonus Wallet
+          </span>
+          <span className="text-[10px] text-[#7A84A8] font-tech uppercase tracking-wide">
+            Non-withdrawable · Tournament entry only
+          </span>
+        </div>
+
+        <div className="font-heading font-black text-3xl sm:text-4xl text-[#2ECC71] tracking-tight mb-3">
+          Rs {bonusBalance.toLocaleString()}
+        </div>
+
+        {profile?.referralCode && (
+          <div className="text-[11px] text-[#7A84A8] font-tech mb-3">
+            Your referral code: <span className="text-[#EEF0FF] font-bold">{profile.referralCode}</span>
+          </div>
+        )}
+
+        <div className="flex items-start gap-2 pt-3 border-t border-[#252B47]">
+          <Users className="w-4 h-4 text-[#7A84A8] mt-0.5 shrink-0" />
+          <div>
+            <span className="text-[11px] text-[#7A84A8] font-tech uppercase block mb-1.5">
+              Players You Referred {referredPlayers.length > 0 && `(${referredPlayers.length})`}
+            </span>
+            {referredPlayers.length === 0 ? (
+              <span className="text-xs text-[#7A84A8]">None yet — share your code to start earning</span>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {referredPlayers.map((name, i) => (
+                  <span
+                    key={i}
+                    className="text-[11px] bg-[#0F1220] border border-[#252B47] text-[#EEF0FF] px-2.5 py-1 rounded-full"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -179,6 +229,16 @@ export const WalletTab: React.FC = () => {
             >
               Withdrawals
             </button>
+            <button
+              onClick={() => setTxFilter('referrals')}
+              className={`px-3 py-1 rounded-lg transition-colors ${
+                txFilter === 'referrals'
+                  ? 'bg-[#2ECC71] text-black font-bold'
+                  : 'bg-[#0F1220] text-[#7A84A8] hover:text-[#EEF0FF]'
+              }`}
+            >
+              Refer Bonus
+            </button>
           </div>
         </div>
 
@@ -208,6 +268,8 @@ export const WalletTab: React.FC = () => {
                           ? 'bg-[#F5A623]/15 text-[#F5A623]'
                           : tx.type === 'entry_fee'
                           ? 'bg-[#4A9EFF]/15 text-[#4A9EFF]'
+                          : tx.type === 'referral_bonus'
+                          ? 'bg-[#2ECC71]/15 text-[#2ECC71]'
                           : 'bg-[#E74C3C]/15 text-[#E74C3C]'
                       }`}
                     >
@@ -215,6 +277,7 @@ export const WalletTab: React.FC = () => {
                       {tx.type === 'prize' && <Trophy className="w-5 h-5" />}
                       {tx.type === 'kill_prize' && <Skull className="w-5 h-5" />}
                       {tx.type === 'entry_fee' && <Trophy className="w-5 h-5" />}
+                      {tx.type === 'referral_bonus' && <Gift className="w-5 h-5" />}
                       {tx.type.startsWith('withdrawal') && <ArrowUpRight className="w-5 h-5" />}
                     </div>
 
@@ -241,6 +304,9 @@ export const WalletTab: React.FC = () => {
                       }`}
                     >
                       {isPositive ? '+' : ''}Rs {Math.abs(tx.amount).toLocaleString()}
+                      {tx.type === 'referral_bonus' && (
+                        <span className="text-[10px] font-normal text-[#7A84A8]"> (bonus)</span>
+                      )}
                     </div>
 
                     <div className="text-[10px] font-tech uppercase font-bold mt-0.5">
