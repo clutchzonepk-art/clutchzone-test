@@ -65,10 +65,10 @@ export const DepositModal: React.FC = () => {
             <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="font-mono font-bold text-lg text-[#EEF0FF]">
-                  0327-0617401
+                  03360793785
                 </div>
                 <div className="text-[11px] text-[#7A84A8]">
-                  Account Title: <strong>ClutchZone Esports / JazzCash / EasyPaisa</strong>
+                  Account Title: <strong>Sardar Muhammad Javaid / EasyPaisa Only</strong>
                 </div>
               </div>
 
