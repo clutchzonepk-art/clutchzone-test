@@ -13,17 +13,38 @@ import {
   HelpCircle,
   Skull,
   Gift,
-  Users
+  Users,
+  Copy,
+  MessageCircle
 } from 'lucide-react';
 import { formatTimestamp } from '../firebase';
 
 export const WalletTab: React.FC = () => {
-  const { profile, transactions, openModal } = useAuth();
+  const { profile, transactions, openModal, showToast } = useAuth();
   const [txFilter, setTxFilter] = useState<'all' | 'deposits' | 'prizes' | 'withdrawals' | 'referrals'>('all');
 
   const balance = profile?.walletBalance || 0;
   const bonusBalance = profile?.bonusBalance || 0;
   const referredPlayers = profile?.referredPlayers || [];
+
+  const referralMessage = profile?.referralCode
+    ? `Hello, mein free fire tournaments khel kr paisy kama rha hon\nap bhi join karo: https://clutchzone.fun\nsignup krty hoe mera referral code use krny pr apko 20rs milein gy\nreferral code: ${profile.referralCode}`
+    : '';
+
+  const handleCopyReferral = async () => {
+    if (!referralMessage) return;
+    try {
+      await navigator.clipboard.writeText(referralMessage);
+      showToast('✅ Referral message copied!', 'success');
+    } catch {
+      showToast('❌ Could not copy — please try again.', 'error');
+    }
+  };
+
+  const handleShareReferralWhatsApp = () => {
+    if (!referralMessage) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(referralMessage)}`, '_blank');
+  };
 
   // Calculate totals from transactions
   let totalDeposited = 0;
@@ -118,8 +139,26 @@ export const WalletTab: React.FC = () => {
         </div>
 
         {profile?.referralCode && (
-          <div className="text-[11px] text-[#7A84A8] font-tech mb-3">
-            Your referral code: <span className="text-[#EEF0FF] font-bold">{profile.referralCode}</span>
+          <div className="mb-3">
+            <div className="text-[11px] text-[#7A84A8] font-tech mb-2">
+              Your referral code: <span className="text-[#EEF0FF] font-bold">{profile.referralCode}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyReferral}
+                className="flex items-center justify-center gap-1.5 text-[11px] font-tech font-bold uppercase bg-[#0F1220] border border-[#252B47] text-[#EEF0FF] px-3 py-2 rounded-lg hover:border-[#2ECC71] transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Copy Message
+              </button>
+              <button
+                onClick={handleShareReferralWhatsApp}
+                className="flex items-center justify-center gap-1.5 text-[11px] font-tech font-bold uppercase bg-[#2ECC71]/10 border border-[#2ECC71]/40 text-[#2ECC71] px-3 py-2 rounded-lg hover:bg-[#2ECC71]/20 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                Share on WhatsApp
+              </button>
+            </div>
           </div>
         )}
 
