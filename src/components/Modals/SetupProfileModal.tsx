@@ -11,6 +11,7 @@ export const SetupProfileModal: React.FC = () => {
   const [gameUID, setGameUID] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('JazzCash');
   const [paymentAccount, setPaymentAccount] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (activeModal !== 'setup') return null;
@@ -54,7 +55,8 @@ export const SetupProfileModal: React.FC = () => {
       whatsapp: trimmedWhatsapp,
       gameUID: trimmedUID,
       paymentMethod,
-      paymentAccount: trimmedAccount
+      paymentAccount: trimmedAccount,
+      referralCode: referralCode.trim() || undefined
     });
     setLoading(false);
   };
@@ -122,6 +124,23 @@ export const SetupProfileModal: React.FC = () => {
                 className="w-full bg-[#161A2E] border border-[#252B47] text-sm text-[#EEF0FF] px-3.5 py-2.5 rounded-xl focus:border-[#F5A623] focus:outline-none transition-colors font-mono"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-tech font-bold uppercase text-[#7A84A8] mb-1">
+                Referral Code <span className="normal-case text-[#7A84A8]/70">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="e.g. AHME123"
+                maxLength={10}
+                className="w-full bg-[#161A2E] border border-[#252B47] text-sm text-[#EEF0FF] px-3.5 py-2.5 rounded-xl focus:border-[#2ECC71] focus:outline-none transition-colors font-mono uppercase"
+              />
+              <p className="text-[10px] text-[#2ECC71] mt-1">
+                🎁 Got a friend's code? Enter it to get Rs 20 bonus instantly!
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
