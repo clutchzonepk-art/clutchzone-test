@@ -62,6 +62,7 @@ interface AuthContextType {
     gameUID: string;
     paymentMethod: PaymentMethod;
     paymentAccount: string;
+    referralCode?: string;
   }) => Promise<boolean>;
   updateProfileData: (data: {
     name: string;
@@ -261,6 +262,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     showToast('Logged out successfully', 'info');
   };
 
+  // Generate a unique referral code for a new player, e.g. "AHME482"
+  const generateUniqueReferralCode = async (name: string): Promise<string> => {
+    const base = (name.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 4) || 'CLTZ');
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = base + Math.floor(100 + Math.random() * 900);
+      try {
+        const q = query(collection(db, 'players'), where('referralCode', '==', candidate));
+        const snap = await getDocs(q);
+        if (snap.empty) return candidate;
+      } catch {
+        // If offline/error, just return the candidate — collision risk is low
+        return candidate;
+      }
+    }
+    // Fallback: timestamp-based, virtually guaranteed unique
+    return base + Date.now().toString().slice(-4);
+  };
+
   // Submit Profile Setup
   const submitProfileSetup = async (data: {
     name: string;
@@ -268,6 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     gameUID: string;
     paymentMethod: PaymentMethod;
     paymentAccount: string;
+    referralCode?: string;
   }): Promise<boolean> => {
     if (!currentUser) {
       showToast('Please login first', 'error');
@@ -291,6 +311,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // continue if offline
       }
 
+      const myReferralCode = await generateUniqueReferralCode(data.name);
+
+      // Resolve referral code entered (if any) to a referrer player
+      let referrerUid: string | null = null;
+      let referrerCodeUsed: string | null = null;
+
+      if (data.referralCode) {
+        try {
+          const refQuery = query(collection(db, 'players'), where('referralCode', '==', data.referralCode));
+          const refSnap = await getDocs(refQuery);
+          if (!refSnap.empty) {
+            const referrerDoc = refSnap.docs[0];
+            if (referrerDoc.id !== currentUser.uid) {
+              referrerUid = referrerDoc.id;
+              referrerCodeUsed = data.referralCode;
+            }
+          } else {
+            showToast('⚠️ Referral code not found — profile created without bonus.', 'info');
+          }
+        } catch {
+          // offline — skip referral bonus silently
+        }
+      }
+
+      const bonusBalance = referrerUid ? 20 : 0;
+
       const newProfile: PlayerProfile = {
         name: data.name,
         whatsapp: data.whatsapp,
@@ -305,6 +351,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tournamentsWon: 0,
         totalKills: 0,
         activeTournaments: [],
+        referralCode: myReferralCode,
+        referredBy: referrerUid,
+        referredByCode: referrerCodeUsed,
+        referredPlayers: [],
+        firstTournamentJoined: false,
+        bonusBalance,
         createdAt: new Date().toISOString()
       };
 
@@ -313,13 +365,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...newProfile,
           createdAt: serverTimestamp()
         });
+
+        if (referrerUid) {
+          // Credit signup bonus transaction for the new player
+          await addDoc(collection(db, 'players', currentUser.uid, 'transactions'), {
+            type: 'referral_bonus',
+            description: 'Referral Signup Bonus',
+            amount: 20,
+            createdAt: new Date().toISOString()
+          });
+
+          // Add this player's name to the referrer's referredPlayers list
+          await updateDoc(doc(db, 'players', referrerUid), {
+            referredPlayers: arrayUnion(data.name)
+          });
+        }
       } catch {
         // Fallback local save
       }
 
       setProfile(newProfile);
       closeModal();
-      showToast('🎉 Profile created successfully! Welcome to ClutchZone!', 'success');
+      if (referrerUid) {
+        showToast('🎉 Profile created! You got Rs 20 bonus for using a referral code!', 'success');
+      } else {
+        showToast('🎉 Profile created successfully! Welcome to ClutchZone!', 'success');
+      }
       return true;
     } catch (err: any) {
       showToast(`Error creating profile: ${err.message}`, 'error');
