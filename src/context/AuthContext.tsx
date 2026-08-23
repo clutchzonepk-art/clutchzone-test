@@ -330,6 +330,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // continue if offline
       }
 
+      // Check if WhatsApp number already taken (prevents one person creating
+      // multiple accounts with different emails to farm referral bonuses)
+      try {
+        const waQuery = query(collection(db, 'players'), where('whatsapp', '==', data.whatsapp));
+        const waSnap = await getDocs(waQuery);
+        let waTaken = false;
+        waSnap.forEach(d => {
+          if (d.id !== currentUser.uid) waTaken = true;
+        });
+        if (waTaken) {
+          showToast('❌ This WhatsApp number is already registered on another account!', 'error');
+          return false;
+        }
+      } catch {
+        // continue if offline
+      }
+
+      // Check if player name (IGN) already taken
+      try {
+        const nameQuery = query(collection(db, 'players'), where('name', '==', data.name));
+        const nameSnap = await getDocs(nameQuery);
+        let nameTaken = false;
+        nameSnap.forEach(d => {
+          if (d.id !== currentUser.uid) nameTaken = true;
+        });
+        if (nameTaken) {
+          showToast('❌ This player name is already taken. Please choose a different name!', 'error');
+          return false;
+        }
+      } catch {
+        // continue if offline
+      }
+
       const myReferralCode = await generateUniqueReferralCode(data.name);
 
       // Resolve referral code entered (if any) to a referrer player
