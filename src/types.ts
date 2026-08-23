@@ -18,6 +18,14 @@ export interface PlayerProfile {
   activeTournamentName?: string | null;
   createdAt?: string | { toDate?: () => Date; seconds?: number };
   fcmToken?: string;
+
+  // Referral system
+  referralCode?: string;              // this player's own unique code (to share)
+  referredBy?: string | null;         // Firebase UID of the player who referred them
+  referredByCode?: string | null;     // the code they entered at signup (for display)
+  referredPlayers?: string[];         // names of players this player has referred
+  firstTournamentJoined?: boolean;    // has this player joined their first paid tournament
+  bonusBalance?: number;              // non-withdrawable balance, tournament entry only
 }
 
 export interface Tournament {
@@ -43,7 +51,7 @@ export interface Tournament {
 
 export interface Transaction {
   id?: string;
-  type: 'deposit' | 'withdrawal' | 'withdrawal_pending' | 'withdrawal_rejected' | 'entry_fee' | 'prize' | 'kill_prize' | 'admin_update';
+  type: 'deposit' | 'withdrawal' | 'withdrawal_pending' | 'withdrawal_rejected' | 'entry_fee' | 'prize' | 'kill_prize' | 'admin_update' | 'referral_bonus';
   tournamentId?: string;
   description: string;
   amount: number;
