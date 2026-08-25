@@ -196,6 +196,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const snap = await getDoc(docRef);
           if (snap.exists()) {
             const existingProfile = snap.data() as PlayerProfile;
+
+            // Enforce admin bans right at login — the admin panel only flips a
+            // status field in Firestore, so the site itself must check it and
+            // refuse to let a banned player use the account.
+            if ((existingProfile as any).status === 'banned') {
+              showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
+              await fbSignOut(auth);
+              setCurrentUser(null);
+              setProfile(null);
+              setTransactions([]);
+              setLoading(false);
+              return;
+            }
+
             if (!existingProfile.referralCode) {
               // Old player from before the referral system existed — generate their code now.
               try {
@@ -427,7 +441,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: new Date().toISOString()
           });
 
-          // Add this player's name to the referrer's referredPlayers list
+          // Add this player's own doc ID to the referrer's referredPlayers list
+          // (their UID never changes, even if they rename themselves later — unlike their display name)
           await updateDoc(doc(db, 'players', referrerUid), {
             referredPlayers: arrayUnion(currentUser.uid)
           });
@@ -486,6 +501,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!profile || !currentUser) {
       openModal('login');
       showToast('Please login to join tournaments', 'error');
+      return false;
+    }
+
+    if ((profile as any).status === 'banned') {
+      showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
       return false;
     }
 
@@ -648,6 +668,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const submitWithdrawalAction = async (amount: number, method: PaymentMethod, account: string): Promise<boolean> => {
     if (!profile || !currentUser) {
       showToast('Please login first', 'error');
+      return false;
+    }
+
+    if ((profile as any).status === 'banned') {
+      showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
       return false;
     }
 
