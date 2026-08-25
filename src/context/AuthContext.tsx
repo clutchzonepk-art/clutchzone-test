@@ -429,7 +429,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           // Add this player's name to the referrer's referredPlayers list
           await updateDoc(doc(db, 'players', referrerUid), {
-            referredPlayers: arrayUnion(data.name)
+            referredPlayers: arrayUnion(currentUser.uid)
           });
         }
       } catch {
