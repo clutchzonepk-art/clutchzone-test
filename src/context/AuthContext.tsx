@@ -475,6 +475,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!profile || !currentUser) return false;
 
     try {
+      // Check if WhatsApp number is already taken by another account
+      try {
+        const waQuery = query(collection(db, 'players'), where('whatsapp', '==', data.whatsapp));
+        const waSnap = await getDocs(waQuery);
+        let waTaken = false;
+        waSnap.forEach(d => {
+          if (d.id !== currentUser.uid) waTaken = true;
+        });
+        if (waTaken) {
+          showToast('❌ This WhatsApp number is already registered on another account!', 'error');
+          return false;
+        }
+      } catch {
+        // continue if offline
+      }
+
+      // Check if player name (IGN) is already taken by another account
+      try {
+        const nameQuery = query(collection(db, 'players'), where('name', '==', data.name));
+        const nameSnap = await getDocs(nameQuery);
+        let nameTaken = false;
+        nameSnap.forEach(d => {
+          if (d.id !== currentUser.uid) nameTaken = true;
+        });
+        if (nameTaken) {
+          showToast('❌ This player name is already taken. Please choose a different name!', 'error');
+          return false;
+        }
+      } catch {
+        // continue if offline
+      }
+
       try {
         await updateDoc(doc(db, 'players', currentUser.uid), {
           name: data.name,
