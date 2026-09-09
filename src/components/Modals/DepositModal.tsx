@@ -13,9 +13,9 @@ export const DepositModal: React.FC = () => {
   const quickAmounts = ['70', '140', '200', '500', '1000'];
 
   const handleCopyAgent = () => {
-    navigator.clipboard.writeText('03270617401');
+    navigator.clipboard.writeText('03360793785');
     setCopied(true);
-    showToast('📋 Agent number copied: 03270617401', 'success');
+    showToast('📋 Agent number copied: 03360793785', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
