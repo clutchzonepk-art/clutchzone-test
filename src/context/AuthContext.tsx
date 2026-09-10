@@ -782,24 +782,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Vote Poll Action
-  const votePollAction = async (announcementId: string, optionIndex: number) => {
+    const votePollAction = async (announcementId: string, optionIndex: number) => {
     const storageKey = `poll_voted_${announcementId}`;
     if (localStorage.getItem(storageKey)) {
       showToast('⚠️ You have already voted on this poll!', 'info');
       return;
     }
 
+    // Lock IMMEDIATELY (synchronously) so rapid repeated clicks during the
+    // network round-trip can never slip through and add extra votes.
+    localStorage.setItem(storageKey, String(optionIndex));
+
     try {
       try {
         const annRef = doc(db, 'announcements', announcementId);
-        const annSnap = await getDoc(annRef);
-        if (annSnap.exists()) {
-          const curVotes: number[] = annSnap.data().votes || [];
-          curVotes[optionIndex] = (curVotes[optionIndex] || 0) + 1;
-          await updateDoc(annRef, { votes: curVotes });
-        }
-      } catch {
-        // offline update
+        // Use a transaction so concurrent votes from different players never
+        // overwrite each other's counts (fixes lost-vote race condition).
+        await runTransaction(db, async (t) => {
+          const annSnap = await t.get(annRef);
+          if (annSnap.exists()) {
+            const curVotes: number[] = annSnap.data().votes || [];
+            curVotes[optionIndex] = (curVotes[optionIndex] || 0) + 1;
+            t.update(annRef, { votes: curVotes });
+          }
+        });
+      } catch (innerErr) {
+        // Firestore write failed — release the lock so the user can retry.
+        localStorage.removeItem(storageKey);
+        throw innerErr;
       }
 
       setAnnouncements(prev =>
@@ -813,7 +823,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         })
       );
 
-      localStorage.setItem(storageKey, String(optionIndex));
       showToast('✅ Vote recorded! Thank you for participating.', 'success');
     } catch (err: any) {
       showToast(`Vote error: ${err.message}`, 'error');
