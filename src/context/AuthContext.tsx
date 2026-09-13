@@ -551,12 +551,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    const activeList = profile.activeTournaments || [];
-    if (activeList.includes(tournamentId)) {
-      showToast('✅ You have already joined this tournament!', 'info');
-      return true;
-    }
-
     // Bonus wallet is used first, withdrawable wallet covers the rest.
     const bonusUsed = Math.min(bonusBal, entryFee);
     const walletUsed = entryFee - bonusUsed;
@@ -567,7 +561,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const referrerBonusAmt = isFirstJoin ? 20 : 10;
 
     try {
-      try {
+      // NOTE: this used to be wrapped in its own try/catch that swallowed
+      // ANY failure here (insufficient balance, already-joined, network
+      // error, permission error — everything) as "offline transaction
+      // simulation", then fell through to the code below that updates local
+      // state and shows a success toast regardless. That meant a failed or
+      // rejected join could still show "Tournament Joined!" to the player
+      // while nothing was actually saved in Firestore. This is a paid
+      // action — a failure here must stop the flow and reach the outer
+      // catch below, never be treated as a soft/offline fallback.
+      {
         const playerRef = doc(db, 'players', currentUser.uid);
         const tournRef = doc(db, 'tournaments', tournamentId);
         const referrerRef = referrerEligible ? doc(db, 'players', referrerId as string) : null;
@@ -577,6 +580,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const tSnap = await t.get(tournRef);
 
           if (pSnap.exists()) {
+            // Re-check "already joined" against the FRESH Firestore doc, not the
+            // stale React `profile` state. This is what actually stops a double
+            // click / retry from charging the entry fee twice — the old check
+            // above ran against local state before this transaction even started,
+            // so two near-simultaneous calls both saw "not joined yet" and both
+            // proceeded to deduct balance.
+            const freshActiveTournaments: string[] = pSnap.data().activeTournaments || [];
+            if (freshActiveTournaments.includes(tournamentId)) {
+              throw new Error('ALREADY_JOINED');
+            }
+
             const freshBonus = pSnap.data().bonusBalance || 0;
             const freshWallet = pSnap.data().walletBalance || 0;
             const freshTotal = freshBonus + freshWallet;
@@ -636,11 +650,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           playerWhatsapp: profile.whatsapp,
           joinedAt: serverTimestamp()
         });
-      } catch {
-        // offline transaction simulation
       }
 
-      // Update local state
+      // Update local state — only reached if the Firestore transaction and
+      // all the writes above actually succeeded.
       setProfile(prev => {
         if (!prev) return null;
         return {
@@ -691,7 +704,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return true;
     } catch (err: any) {
-      showToast(`Join error: ${err.message}`, 'error');
+      if (err.message === 'ALREADY_JOINED') {
+        showToast('✅ You have already joined this tournament!', 'info');
+      } else if (err.message === 'INSUFFICIENT_BALANCE') {
+        showToast('❌ Insufficient balance! Please deposit first.', 'error');
+        openModal('deposit');
+      } else {
+        showToast(`Join error: ${err.message}`, 'error');
+      }
       return false;
     }
   };
