@@ -1,20 +1,13 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# ClutchZone Art
 
-# Run and deploy your AI Studio app
+Welcome to the official repository for **clutchzone.fun**. This is a high-performance web platform built with Vite, TypeScript, and modern front-end tooling.
 
-This contains everything you need to run your app locally.
+## 🚀 Live Site
+Visit the live application at: [clutchzone.fun](https://clutchzone.fun)
 
-View your app in AI Studio: https://ai.studio/apps/99ff31cc-e64d-4080-a010-832bc48fcb04
-
-## Run Locally
-
-**Prerequisites:**  Node.js
+## 🛠️ Technology Stack
+* **Build Tool:** Vite
+* **Language:** TypeScript
+* **Package Management:** Bun / npm
 
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
