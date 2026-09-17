@@ -1,4 +1,4 @@
-# ClutchZone Art
+**ClutchZone Esports**
 
 Welcome to the official repository for **clutchzone.fun**. This is a high-performance web platform built with Vite, TypeScript, and modern front-end tooling.
 
@@ -8,6 +8,6 @@ Visit the live application at: [clutchzone.fun](https://clutchzone.fun)
 ## 🛠️ Technology Stack
 * **Build Tool:** Vite
 * **Language:** TypeScript
-* **Package Management:** Bun / npm
-
-
+<div align="center">
+  <img src="public/og-image.jpg" alt="ClutchZone Banner" width="100%" max-width="800px" />
+</div>
