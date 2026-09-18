@@ -559,9 +559,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const walletUsed = entryFee - bonusUsed;
 
     const referrerId = profile.referredBy || null;
-    const isFirstJoin = !profile.firstTournamentJoined;
     const referrerEligible = !!referrerId && entryFee >= 60;
-    const referrerBonusAmt = isFirstJoin ? 20 : 10;
 
     try {
       // NOTE: this used to be wrapped in its own try/catch that swallowed
@@ -578,85 +576,110 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const tournRef = doc(db, 'tournaments', tournamentId);
         const referrerRef = referrerEligible ? doc(db, 'players', referrerId as string) : null;
 
+        // Pre-generate refs for the participant record and the two
+        // transaction logs so they can be written INSIDE the same atomic
+        // transaction as the balance deduction below (a transaction can
+        // create/update any number of documents by ref — it isn't limited
+        // to the ones it read). Previously these were separate addDoc()
+        // calls made AFTER the transaction had already committed — if the
+        // player closed or refreshed the tab in that gap, the wallet was
+        // already deducted and joinedCount/activeTournaments already
+        // updated, but the participant record (and tx logs) never got
+        // created, because the page's JS execution was killed before those
+        // calls ran. Bundling everything into one transaction makes the
+        // whole join atomic: either every part of it saves, or none of it
+        // does — there is no longer a gap where closing the tab loses data.
+        const participantRef = doc(collection(db, 'tournaments', tournamentId, 'participants'));
+        const entryTxRef = doc(collection(db, 'players', currentUser.uid, 'transactions'));
+        const referralTxRef = referrerEligible
+          ? doc(collection(db, 'players', referrerId as string, 'transactions'))
+          : null;
+
         await runTransaction(db, async (t) => {
           const pSnap = await t.get(playerRef);
           const tSnap = await t.get(tournRef);
 
-          if (pSnap.exists()) {
-            // Re-check "already joined" against the FRESH Firestore doc, not the
-            // stale React `profile` state. This is what actually stops a double
-            // click / retry from charging the entry fee twice — the old check
-            // above ran against local state before this transaction even started,
-            // so two near-simultaneous calls both saw "not joined yet" and both
-            // proceeded to deduct balance.
-            const freshActiveTournaments: string[] = pSnap.data().activeTournaments || [];
-            if (freshActiveTournaments.includes(tournamentId)) {
-              throw new Error('ALREADY_JOINED');
-            }
+          if (!pSnap.exists()) throw new Error('PROFILE_NOT_FOUND');
 
-            const freshBonus = pSnap.data().bonusBalance || 0;
-            const freshWallet = pSnap.data().walletBalance || 0;
-            const freshTotal = freshBonus + freshWallet;
-            if (freshTotal < entryFee) throw new Error('INSUFFICIENT_BALANCE');
-
-            const freshBonusUsed = Math.min(freshBonus, entryFee);
-            const freshWalletUsed = entryFee - freshBonusUsed;
-
-            const playerUpdate: any = {
-              bonusBalance: freshBonus - freshBonusUsed,
-              walletBalance: freshWallet - freshWalletUsed,
-              tournamentsPlayed: increment(1),
-              activeTournaments: arrayUnion(tournamentId)
-            };
-            if (referrerEligible && !pSnap.data().firstTournamentJoined) {
-              playerUpdate.firstTournamentJoined = true;
-            }
-            t.update(playerRef, playerUpdate);
+          // Re-check "already joined" against the FRESH Firestore doc, not the
+          // stale React `profile` state. This is what actually stops a double
+          // click / retry from charging the entry fee twice — the old check
+          // above ran against local state before this transaction even started,
+          // so two near-simultaneous calls both saw "not joined yet" and both
+          // proceeded to deduct balance.
+          const freshActiveTournaments: string[] = pSnap.data().activeTournaments || [];
+          if (freshActiveTournaments.includes(tournamentId)) {
+            throw new Error('ALREADY_JOINED');
           }
+
+          const freshBonus = pSnap.data().bonusBalance || 0;
+          const freshWallet = pSnap.data().walletBalance || 0;
+          const freshTotal = freshBonus + freshWallet;
+          if (freshTotal < entryFee) throw new Error('INSUFFICIENT_BALANCE');
+
+          const freshBonusUsed = Math.min(freshBonus, entryFee);
+          const freshWalletUsed = entryFee - freshBonusUsed;
+          // Computed fresh from the transaction snapshot rather than the
+          // outer (possibly stale) `profile` state, so the referrer is
+          // never credited the wrong amount due to a stale local flag.
+          const freshIsFirstJoin = !pSnap.data().firstTournamentJoined;
+          const freshReferrerBonusAmt = freshIsFirstJoin ? 20 : 10;
+
+          const playerUpdate: any = {
+            bonusBalance: freshBonus - freshBonusUsed,
+            walletBalance: freshWallet - freshWalletUsed,
+            tournamentsPlayed: increment(1),
+            activeTournaments: arrayUnion(tournamentId)
+          };
+          if (referrerEligible && freshIsFirstJoin) {
+            playerUpdate.firstTournamentJoined = true;
+          }
+          t.update(playerRef, playerUpdate);
+
           if (tSnap.exists()) {
             t.update(tournRef, { joinedCount: increment(1) });
           }
           if (referrerRef) {
-            t.update(referrerRef, { bonusBalance: increment(referrerBonusAmt) });
+            t.update(referrerRef, { bonusBalance: increment(freshReferrerBonusAmt) });
           }
-        });
 
-        // Entry fee transaction log (own history)
-        let note = '';
-        if (bonusUsed > 0 && walletUsed > 0) note = `${bonusUsed} bonus - ${walletUsed} wallet`;
-        else if (bonusUsed > 0) note = `${bonusUsed} bonus`;
-        else note = `${walletUsed} wallet`;
+          // Entry fee transaction log (own history)
+          let note = '';
+          if (freshBonusUsed > 0 && freshWalletUsed > 0) note = `${freshBonusUsed} bonus - ${freshWalletUsed} wallet`;
+          else if (freshBonusUsed > 0) note = `${freshBonusUsed} bonus`;
+          else note = `${freshWalletUsed} wallet`;
 
-        await addDoc(collection(db, 'players', currentUser.uid, 'transactions'), {
-          type: 'entry_fee',
-          tournamentId,
-          description: `Entry Fee - ${tournamentName}`,
-          amount: -entryFee,
-          note,
-          createdAt: new Date().toISOString()
-        });
-
-        // Referral bonus transaction log (goes into the REFERRER's history, not shown to joining player)
-        if (referrerEligible && referrerId) {
-          await addDoc(collection(db, 'players', referrerId, 'transactions'), {
-            type: 'referral_bonus',
-            description: `Tournament joined by - ${profile.name}`,
-            amount: referrerBonusAmt,
+          t.set(entryTxRef, {
+            type: 'entry_fee',
+            tournamentId,
+            description: `Entry Fee - ${tournamentName}`,
+            amount: -entryFee,
+            note,
             createdAt: new Date().toISOString()
           });
-        }
 
-        // Add participant doc
-        // firebaseUID is included specifically so firestore.rules can verify
-        // that a player can only create a participant record for themselves
-        // (playerUID above is the in-game Free Fire UID, not the Firebase
-        // Auth UID, so it can't be used for that check).
-        await addDoc(collection(db, 'tournaments', tournamentId, 'participants'), {
-          firebaseUID: currentUser.uid,
-          playerUID: profile.gameUID,
-          playerName: profile.name,
-          playerWhatsapp: profile.whatsapp,
-          joinedAt: serverTimestamp()
+          // Referral bonus transaction log (goes into the REFERRER's history, not shown to joining player)
+          if (referrerRef && referralTxRef) {
+            t.set(referralTxRef, {
+              type: 'referral_bonus',
+              description: `Tournament joined by - ${profile.name}`,
+              amount: freshReferrerBonusAmt,
+              createdAt: new Date().toISOString()
+            });
+          }
+
+          // Participant doc — firebaseUID is included specifically so
+          // firestore.rules can verify that a player can only create a
+          // participant record for themselves (playerUID below is the
+          // in-game Free Fire UID, not the Firebase Auth UID, so it can't
+          // be used for that check).
+          t.set(participantRef, {
+            firebaseUID: currentUser.uid,
+            playerUID: profile.gameUID,
+            playerName: profile.name,
+            playerWhatsapp: profile.whatsapp,
+            joinedAt: serverTimestamp()
+          });
         });
       }
 
@@ -717,6 +740,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (err.message === 'INSUFFICIENT_BALANCE') {
         showToast('❌ Insufficient balance! Please deposit first.', 'error');
         openModal('deposit');
+      } else if (err.message === 'PROFILE_NOT_FOUND') {
+        showToast('❌ Could not find your profile. Please try logging in again.', 'error');
       } else {
         showToast(`Join error: ${err.message}`, 'error');
       }
