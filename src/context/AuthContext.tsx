@@ -774,6 +774,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const playerRef = doc(db, 'players', currentUser.uid);
 
+      // Pre-generate refs so the transaction log's ID can be linked onto the
+      // withdrawal request as `txDocId`. This is what lets the admin panel
+      // find and update THIS SAME transaction in place when the request is
+      // later approved/rejected, instead of creating a second, separate
+      // transaction while this original one is left stuck showing "Pending
+      // Review" forever (the admin panel's own code already expects and
+      // reads a txDocId field — the website just never wrote it).
+      const txRef = doc(collection(db, 'players', currentUser.uid, 'transactions'));
+      const withdrawalRef = doc(collection(db, 'withdrawalRequests'));
+
       // CRITICAL FIX: this whole block used to be wrapped in an inner
       // try/catch that swallowed EVERY failure here — including the fresh
       // INSUFFICIENT_BALANCE check below (re-verified against live Firestore
@@ -784,33 +794,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // rules rejection) could still show success to the player while
       // nothing was saved and the admin never received the request. A
       // failure here must now stop the flow and hit the outer catch below.
+      //
+      // All three writes (balance deduction, transaction log, withdrawal
+      // request) are also now in ONE atomic transaction — previously they
+      // were 3 separate sequential calls, so closing/refreshing the tab
+      // right after the balance was deducted could leave the withdrawal
+      // request (and/or transaction log) never created, the same class of
+      // bug already fixed for tournament joins.
       await runTransaction(db, async (t) => {
         const snap = await t.get(playerRef);
         if (!snap.exists()) throw new Error('PROFILE_NOT_FOUND');
         const freshBal = snap.data().walletBalance || 0;
         if (freshBal < amount) throw new Error('INSUFFICIENT_BALANCE');
+
         t.update(playerRef, { walletBalance: freshBal - amount });
-      });
 
-      // Add withdrawal request
-      await addDoc(collection(db, 'withdrawalRequests'), {
-        playerFirebaseUID: currentUser.uid,
-        playerUID: profile.gameUID,
-        playerName: profile.name,
-        playerWhatsapp: profile.whatsapp,
-        paymentMethod: method,
-        paymentAccount: account,
-        amount,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
+        t.set(txRef, {
+          type: 'withdrawal_pending',
+          description: `Withdrawal Request - ${method} (Pending Approval)`,
+          amount: -amount,
+          createdAt: new Date().toISOString()
+        });
 
-      // Add transaction
-      await addDoc(collection(db, 'players', currentUser.uid, 'transactions'), {
-        type: 'withdrawal_pending',
-        description: `Withdrawal Request - ${method} (Pending Approval)`,
-        amount: -amount,
-        createdAt: new Date().toISOString()
+        t.set(withdrawalRef, {
+          playerFirebaseUID: currentUser.uid,
+          playerUID: profile.gameUID,
+          playerName: profile.name,
+          playerWhatsapp: profile.whatsapp,
+          paymentMethod: method,
+          paymentAccount: account,
+          amount,
+          status: 'pending',
+          txDocId: txRef.id,
+          createdAt: new Date().toISOString()
+        });
       });
 
       // Local state is only updated after every write above has actually
