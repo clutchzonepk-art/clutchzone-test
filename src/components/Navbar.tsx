@@ -74,6 +74,16 @@ export const Navbar: React.FC = () => {
           >
             Results
           </button>
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className={`px-3.5 py-1.5 rounded-full transition-colors ${
+              activeTab === 'leaderboard'
+                ? 'bg-[#F5A623] text-black shadow-sm'
+                : 'text-[#7A84A8] hover:text-[#EEF0FF]'
+            }`}
+          >
+            Leaderboard
+          </button>
         </nav>
 
         {/* Right actions */}
