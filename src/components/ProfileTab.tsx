@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Wallet, 
@@ -10,11 +10,30 @@ import {
   CreditCard, 
   Mail, 
   LogOut,
-  Sparkles
+  Sparkles,
+  Flame
 } from 'lucide-react';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { levelProgress } from '../leaderboard';
 
 export const ProfileTab: React.FC = () => {
   const { profile, currentUser, openModal, setActiveTab, logout } = useAuth();
+  const [xp, setXp] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'leaderboard', currentUser.uid));
+        if (!cancelled) setXp(snap.exists() ? (snap.data().xp || 0) : 0);
+      } catch {
+        if (!cancelled) setXp(0);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [currentUser]);
 
   if (!profile || !currentUser) {
     return (
@@ -70,6 +89,11 @@ export const ProfileTab: React.FC = () => {
               <span className="inline-flex items-center gap-1 bg-[#F5A623]/15 text-[#F5A623] border border-[#F5A623]/30 text-[10px] font-tech font-bold uppercase px-2.5 py-0.5 rounded-full self-center sm:self-auto">
                 <Sparkles className="w-3 h-3" /> Clutch Pro Player
               </span>
+              {xp !== null && (
+                <span className="inline-flex items-center gap-1 bg-[#4A9EFF]/15 text-[#4A9EFF] border border-[#4A9EFF]/30 text-[10px] font-tech font-bold uppercase px-2.5 py-0.5 rounded-full self-center sm:self-auto">
+                  <Flame className="w-3 h-3" /> Level {levelProgress(xp).level}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4 text-xs text-[#7A84A8] pt-2">
@@ -120,6 +144,31 @@ export const ProfileTab: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Level / XP Progress */}
+      {xp !== null && (() => {
+        const lp = levelProgress(xp);
+        return (
+          <div className="bg-[#161A2E] border border-[#252B47] rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 font-heading font-black text-lg text-[#EEF0FF] uppercase">
+                <Flame className="w-5 h-5 text-[#4A9EFF]" />
+                Level {lp.level}
+              </div>
+              <div className="text-xs text-[#7A84A8] font-tech">
+                {xp.toLocaleString()} XP
+                {lp.xpNeeded > 0 && ` · ${lp.xpNeeded.toLocaleString()} XP to Level ${lp.level + 1}`}
+              </div>
+            </div>
+            <div className="w-full h-2.5 bg-[#0F1220] rounded-full overflow-hidden border border-[#252B47]">
+              <div
+                className="h-full bg-gradient-to-r from-[#4A9EFF] to-[#2ECC71] rounded-full transition-all"
+                style={{ width: `${Math.round(lp.progress * 100)}%` }}
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Lifetime Gaming Stats */}
       <div>
