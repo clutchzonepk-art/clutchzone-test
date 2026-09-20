@@ -1,5 +1,15 @@
 export type PaymentMethod = 'JazzCash' | 'EasyPaisa';
 
+export interface LeaderboardEntry {
+  name: string;
+  xp: number;
+  level: number;
+  dailyXP?: number;
+  dailyDate?: string;      // "2026-09-19" (PKT calendar date) — dailyXP is only valid for today if this matches
+  weeklyXP?: number;
+  weeklyWeekKey?: string;  // "2026-W38" (ISO week, PKT) — weeklyXP is only valid for this week if this matches
+}
+
 export interface PlayerProfile {
   name: string;
   whatsapp: string;
