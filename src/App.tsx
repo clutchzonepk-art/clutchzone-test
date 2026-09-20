@@ -11,6 +11,7 @@ import { HomeTab } from './components/HomeTab';
 import { TournamentsTab } from './components/TournamentsTab';
 import { WalletTab } from './components/WalletTab';
 import { ResultsTab } from './components/ResultsTab';
+import { LeaderboardTab } from './components/LeaderboardTab';
 import { ProfileTab } from './components/ProfileTab';
 
 // Modals
@@ -58,6 +59,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'tournaments' && <TournamentsTab />}
         {activeTab === 'wallet' && <WalletTab />}
         {activeTab === 'results' && <ResultsTab />}
+        {activeTab === 'leaderboard' && <LeaderboardTab />}
         {activeTab === 'profile' && <ProfileTab />}
       </main>
 
