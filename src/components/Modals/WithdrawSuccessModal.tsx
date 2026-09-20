@@ -44,7 +44,7 @@ export const WithdrawSuccessModal: React.FC = () => {
           <div className="flex justify-between pt-2 border-t border-[#252B47]">
             <span className="text-[#7A84A8]">Estimated Time:</span>
             <span className="text-[#2ECC71] font-bold flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> Within 24 Hours
+              <Clock className="w-3.5 h-3.5" /> Within 12 Hours
             </span>
           </div>
         </div>
