@@ -26,6 +26,7 @@ import {
   DEFAULT_RESULTS
 } from '../firebase';
 import { PlayerProfile, Tournament, Transaction, MatchResult, Announcement, SupportRequest, PaymentMethod } from '../types';
+import { GAME_MODE_XP, applyXpGain } from '../leaderboard';
 import confetti from 'canvas-confetti';
 
 interface ToastInfo {
@@ -38,8 +39,8 @@ interface AuthContextType {
   currentUser: User | null;
   profile: PlayerProfile | null;
   loading: boolean;
-  activeTab: 'home' | 'tournaments' | 'wallet' | 'results' | 'profile';
-  setActiveTab: (tab: 'home' | 'tournaments' | 'wallet' | 'results' | 'profile') => void;
+  activeTab: 'home' | 'tournaments' | 'wallet' | 'results' | 'leaderboard' | 'profile';
+  setActiveTab: (tab: 'home' | 'tournaments' | 'wallet' | 'results' | 'leaderboard' | 'profile') => void;
   tournaments: Tournament[];
   announcements: Announcement[];
   matchResults: MatchResult[];
@@ -83,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'home' | 'tournaments' | 'wallet' | 'results' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'tournaments' | 'wallet' | 'results' | 'leaderboard' | 'profile'>('home');
   
   const [tournaments, setTournaments] = useState<Tournament[]>(DEFAULT_TOURNAMENTS);
   const [announcements, setAnnouncements] = useState<Announcement[]>(DEFAULT_ANNOUNCEMENTS);
@@ -594,10 +595,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const referralTxRef = referrerEligible
           ? doc(collection(db, 'players', referrerId as string, 'transactions'))
           : null;
+        const lbRef = doc(db, 'leaderboard', currentUser.uid);
 
         await runTransaction(db, async (t) => {
           const pSnap = await t.get(playerRef);
           const tSnap = await t.get(tournRef);
+          const lbSnap = await t.get(lbRef);
 
           if (!pSnap.exists()) throw new Error('PROFILE_NOT_FOUND');
 
@@ -641,6 +644,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           if (referrerRef) {
             t.update(referrerRef, { bonusBalance: increment(freshReferrerBonusAmt) });
+          }
+
+          // Join XP — written to the separate, public-safe `leaderboard`
+          // collection (never the player's own doc, which holds
+          // whatsapp/payment details). Amount depends on the tournament's
+          // mode; unrecognized/missing modes simply award 0 rather than
+          // failing the join.
+          const joinXp = (tSnap.exists() && GAME_MODE_XP[tSnap.data().mode]) || 0;
+          if (joinXp > 0) {
+            const lbCurrent = lbSnap.exists() ? lbSnap.data() : undefined;
+            const updated = applyXpGain(lbCurrent as any, joinXp);
+            t.set(lbRef, { name: profile.name, ...updated }, { merge: true });
           }
 
           // Entry fee transaction log (own history)
