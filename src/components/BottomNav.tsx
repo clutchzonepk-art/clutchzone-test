@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Home, Swords, Wallet, Trophy, User } from 'lucide-react';
+import { Home, Swords, Wallet, Trophy, Flame, User } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab, profile } = useAuth();
@@ -59,6 +59,18 @@ export const BottomNav: React.FC = () => {
         >
           <Trophy className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] uppercase font-tech tracking-wider">Results</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('leaderboard')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${
+            activeTab === 'leaderboard'
+              ? 'text-[#F5A623] scale-105 font-bold'
+              : 'text-[#7A84A8] hover:text-[#EEF0FF]'
+          }`}
+        >
+          <Flame className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] uppercase font-tech tracking-wider">Rank</span>
         </button>
 
         <button
