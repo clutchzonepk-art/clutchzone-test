@@ -1,4 +1,5 @@
 **ClutchZone Esports**
+Earn money by just playing
 
 Welcome to the official repository for **clutchzone.fun**. This is a high-performance web platform built with Vite, TypeScript, and modern front-end tooling.
 
