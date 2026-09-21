@@ -17,6 +17,20 @@ export const GAME_MODE_XP: Record<string, number> = {
   'Squad BR Classic': 30
 };
 
+/**
+ * Case/whitespace-insensitive lookup of GAME_MODE_XP. A tournament's `mode`
+ * is normally set via a fixed dropdown so it should always match exactly,
+ * but a manually-edited or legacy Firestore doc could have a stray
+ * capitalization difference (e.g. "lone Wolf" instead of "Lone Wolf") —
+ * without this, that would silently award 0 XP with no error anywhere.
+ */
+export function getModeXp(mode: string | undefined | null): number {
+  if (!mode) return 0;
+  const normalized = mode.trim().toLowerCase();
+  const match = Object.keys(GAME_MODE_XP).find(k => k.toLowerCase() === normalized);
+  return match ? GAME_MODE_XP[match] : 0;
+}
+
 export const XP_PER_KILL = 3;
 
 /**
