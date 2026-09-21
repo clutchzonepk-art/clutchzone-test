@@ -26,7 +26,7 @@ import {
   DEFAULT_RESULTS
 } from '../firebase';
 import { PlayerProfile, Tournament, Transaction, MatchResult, Announcement, SupportRequest, PaymentMethod } from '../types';
-import { GAME_MODE_XP, applyXpGain } from '../leaderboard';
+import { getModeXp, applyXpGain } from '../leaderboard';
 import confetti from 'canvas-confetti';
 
 interface ToastInfo {
@@ -651,7 +651,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // whatsapp/payment details). Amount depends on the tournament's
           // mode; unrecognized/missing modes simply award 0 rather than
           // failing the join.
-          const joinXp = (tSnap.exists() && GAME_MODE_XP[tSnap.data().mode]) || 0;
+          const joinXp = tSnap.exists() ? getModeXp(tSnap.data().mode) : 0;
           if (joinXp > 0) {
             const lbCurrent = lbSnap.exists() ? lbSnap.data() : undefined;
             const updated = applyXpGain(lbCurrent as any, joinXp);
