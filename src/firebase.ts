@@ -41,7 +41,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-export const OWNER_WHATSAPP = "923270617401";
+export const OWNER_WHATSAPP = "923230410819";
 export const OWNER_EMAIL = "clutchzone.pk@gmail.com";
 
 // Helper to safely parse dates across strings & Firestore Timestamps
