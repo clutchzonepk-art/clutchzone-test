@@ -58,7 +58,7 @@ export const DepositModal: React.FC = () => {
               Deposit Wallet Funds
             </h2>
             <p className="text-xs text-[#7A84A8] mt-0.5">
-              Transfer to our official JazzCash/EasyPaisa agent for instant wallet balance top-up.
+              Transfer to our official JazzCash agent for instant wallet balance top-up.
             </p>
           </div>
 
@@ -73,7 +73,7 @@ export const DepositModal: React.FC = () => {
                   03230410819
                 </div>
                 <div className="text-[11px] text-[#7A84A8]">
-                  Account Title: <strong>Sardar Muhammad Javaid / EasyPaisa Only</strong>
+                  Account Title: <strong>Muhammad Bilal / JazzCash Only</strong>
                 </div>
               </div>
 
