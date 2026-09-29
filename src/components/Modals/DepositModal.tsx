@@ -13,9 +13,9 @@ export const DepositModal: React.FC = () => {
   const quickAmounts = ['70', '140', '200', '500', '1000'];
 
   const handleCopyAgent = () => {
-    navigator.clipboard.writeText('03360793785');
+    navigator.clipboard.writeText('03230410819');
     setCopied(true);
-    showToast('📋 Agent number copied: 03360793785', 'success');
+    showToast('📋 Agent number copied: 03230410819', 'success');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -70,7 +70,7 @@ export const DepositModal: React.FC = () => {
             <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="font-mono font-bold text-lg text-[#EEF0FF]">
-                  03360793785
+                  03230410819
                 </div>
                 <div className="text-[11px] text-[#7A84A8]">
                   Account Title: <strong>Sardar Muhammad Javaid / EasyPaisa Only</strong>
