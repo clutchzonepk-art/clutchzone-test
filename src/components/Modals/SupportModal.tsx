@@ -108,7 +108,7 @@ export const SupportModal: React.FC = () => {
 
               <div>
                 <div className="text-xs text-[#7A84A8] uppercase font-tech font-bold">Fastest 2-Minute Response</div>
-                <div className="font-mono font-black text-xl text-[#EEF0FF] mt-1">+92 327 0617401</div>
+                <div className="font-mono font-black text-xl text-[#EEF0FF] mt-1">+92 3230410819</div>
                 <div className="text-xs text-[#2ECC71] font-tech font-bold flex items-center justify-center gap-1 mt-1">
                   <Clock className="w-3.5 h-3.5" /> Support Available 10:00 AM – 11:00 PM Daily
                 </div>
