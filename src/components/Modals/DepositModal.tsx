@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { X, MessageCircle, Copy, Check } from 'lucide-react';
-import { OWNER_WHATSAPP } from '../../firebase';
+import { sendSupportMessage, openSupportChat } from '../../supportChat';
 
 export const DepositModal: React.FC = () => {
-  const { activeModal, closeModal, profile, showToast } = useAuth();
+  const { activeModal, closeModal, profile, currentUser, showToast } = useAuth();
   const [amount, setAmount] = useState('200');
   const [copied, setCopied] = useState(false);
+  const [tid, setTid] = useState('');
+  const [sending, setSending] = useState(false);
 
   if (activeModal !== 'deposit') return null;
 
@@ -19,8 +21,9 @@ export const DepositModal: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleWhatsAppDeposit = () => {
-    if (!profile) {
+  // Deposit request ab in-app Support Chat mein jati hai (WhatsApp nahi)
+  const handleSendDepositRequest = async () => {
+    if (!profile || !currentUser) {
       showToast('Please login first to deposit', 'error');
       return;
     }
@@ -31,12 +34,36 @@ export const DepositModal: React.FC = () => {
       return;
     }
 
-    const msg = encodeURIComponent(
-      `Hi, I want to deposit *Rs ${parsedAmount}* in my ClutchZone wallet.\nPlayer Name: *${profile.name}*\nGame UID: *${profile.gameUID}*\nRegistered WhatsApp: *${profile.whatsapp}*`
-    );
+    const cleanTid = tid.trim();
+    if (!/^[A-Za-z0-9]{6,20}$/.test(cleanTid)) {
+      showToast('❌ Please enter the JazzCash Transaction ID (TID) from your payment SMS!', 'error');
+      return;
+    }
 
-    window.open(`https://wa.me/${OWNER_WHATSAPP}?text=${msg}`, '_blank');
-    closeModal();
+    setSending(true);
+    try {
+      await sendSupportMessage({
+        chatUid: currentUser.uid,
+        playerName: profile.name,
+        text:
+          `💰 Deposit Request\n` +
+          `Amount: Rs ${parsedAmount}\n` +
+          `Transaction ID (TID): ${cleanTid}\n` +
+          `Player: ${profile.name}\n` +
+          `Game UID: ${profile.gameUID}`,
+        role: 'player',
+        senderId: currentUser.uid
+      });
+      setTid('');
+      closeModal();
+      showToast('✅ Deposit request sent! Balance 2-5 minutes mein add hoga. Reply chat mein aayega.', 'success');
+      openSupportChat();
+    } catch (err) {
+      console.error('Deposit request error:', err);
+      showToast('❌ Request send nahi hui. Internet check karke dobara try karo.', 'error');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -119,19 +146,33 @@ export const DepositModal: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-tech font-bold uppercase text-[#7A84A8] mb-1.5">
+              JazzCash Transaction ID (TID)
+            </label>
+            <input
+              type="text"
+              value={tid}
+              onChange={(e) => setTid(e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20))}
+              placeholder="Payment SMS mein likha TID (e.g. 12345678901)"
+              className="w-full bg-[#161A2E] border border-[#252B47] text-sm text-[#EEF0FF] px-3.5 py-2.5 rounded-xl focus:border-[#F5A623] focus:outline-none transition-colors font-mono"
+            />
+          </div>
+
           <div className="text-xs text-[#7A84A8] space-y-1 bg-[#0F1220] p-3 rounded-xl border border-[#252B47]">
             <div>💡 <strong>How it works:</strong></div>
             <p>1. Send payment to agent account above.</p>
-            <p>2. Click button below to send screenshot &amp; Player UID on WhatsApp.</p>
+            <p>2. Enter the Transaction ID (TID) from your payment SMS and send the request in-app.</p>
             <p>3. Balance is credited to your wallet in <strong>2-5 minutes</strong>!</p>
           </div>
 
           <button
-            onClick={handleWhatsAppDeposit}
-            className="w-full py-3.5 bg-[#25D366] text-black font-heading font-black text-base uppercase tracking-wider rounded-xl shadow-lg shadow-[#25D366]/20 hover:brightness-110 active:scale-98 flex items-center justify-center gap-2 transition-all"
+            onClick={handleSendDepositRequest}
+            disabled={sending}
+            className="w-full py-3.5 bg-[#F5A623] text-black font-heading font-black text-base uppercase tracking-wider rounded-xl shadow-lg shadow-[#F5A623]/20 hover:brightness-110 active:scale-98 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
             <MessageCircle className="w-5 h-5 fill-current" />
-            <span>CONTACT AGENT ON WHATSAPP</span>
+            <span>{sending ? 'SENDING...' : 'SEND DEPOSIT REQUEST'}</span>
           </button>
         </div>
       </div>
