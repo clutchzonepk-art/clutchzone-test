@@ -65,15 +65,6 @@ export const Footer: React.FC = () => {
             <span>TikTok</span>
           </a>
 
-          <a
-            href="https://whatsapp.com/channel/0029VbBwzMqBlHpcBu6jO53D"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 text-xs font-tech font-bold uppercase hover:bg-[#25D366]/20 transition-colors"
-          >
-            <MessageCircle className="w-3.5 h-3.5 fill-current" />
-            <span>WhatsApp Channel</span>
-          </a>
         </div>
 
         {/* Legal & Support Links */}
