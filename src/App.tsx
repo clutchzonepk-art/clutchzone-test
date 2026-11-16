@@ -5,6 +5,7 @@ import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
+import { SupportChat } from './components/SupportChat';
 
 // Tab views
 import { HomeTab } from './components/HomeTab';
@@ -26,7 +27,7 @@ import { SupportModal } from './components/Modals/SupportModal';
 import { TermsModal } from './components/Modals/TermsModal';
 
 const AppContent: React.FC = () => {
-  const { activeTab, loading } = useAuth();
+  const { activeTab, loading, currentUser, profile } = useAuth();
 
   if (loading) {
     return (
@@ -66,6 +67,9 @@ const AppContent: React.FC = () => {
       <Footer />
       <BottomNav />
       <ToastContainer />
+
+      {/* Player <-> Admin support chat (sirf logged-in aur profile-complete player ke liye) */}
+      {currentUser && profile && <SupportChat uid={currentUser.uid} playerName={profile.name} />}
 
       {/* Global Modals */}
       <LoginModal />
