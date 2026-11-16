@@ -292,7 +292,7 @@ export const TournamentsTab: React.FC = () => {
                       <span>You Are Registered in This Match</span>
                     </div>
                     <p className="text-[11px] text-[#7A84A8] mt-0.5">
-                      Room ID &amp; Password will be sent to your WhatsApp 15m before start.
+                      Room ID &amp; Password will be sent in your Support Chat 15m before start.
                     </p>
                   </div>
                 ) : (
