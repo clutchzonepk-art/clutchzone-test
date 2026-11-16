@@ -101,7 +101,7 @@ export const JoinConfirmModal: React.FC = () => {
             </div>
           ) : (
             <div className="p-3 bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-xl text-xs text-[#7A84A8]">
-              📱 Room ID &amp; Password will be sent to WhatsApp (<strong>{profile?.whatsapp}</strong>) <strong>15 minutes</strong> before match start.
+              💬 Room ID &amp; Password will be sent in your in-app <strong>Support Chat</strong> <strong>15 minutes</strong> before match start.
             </div>
           )}
 
