@@ -49,7 +49,7 @@ export const WalletTab: React.FC = () => {
       const resolved: Record<string, string> = {};
       for (const chunk of chunks) {
         try {
-          const q = query(collection(db, 'players'), where(documentId(), 'in', chunk));
+          const q = query(collection(db, 'publicProfiles'), where(documentId(), 'in', chunk));
           const snap = await getDocs(q);
           snap.forEach(d => {
             resolved[d.id] = d.data().name || `Player ${d.id.slice(0, 6)}`;
