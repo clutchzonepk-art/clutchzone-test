@@ -50,7 +50,7 @@ export const WithdrawSuccessModal: React.FC = () => {
         </div>
 
         <p className="text-[11px] text-[#7A84A8] leading-relaxed">
-          You will receive an automated WhatsApp confirmation message once the payment transaction is completed.
+          You will get a confirmation message in your in-app Support Chat once the payment is completed.
         </p>
 
         <button
