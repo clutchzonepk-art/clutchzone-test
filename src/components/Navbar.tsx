@@ -88,7 +88,7 @@ export const Navbar: React.FC = () => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          {/* Quick WhatsApp Help */}
+          {/* Quick Support (opens in-app chat) */}
           <button
             onClick={() => openModal('support')}
             title="Customer Support"
