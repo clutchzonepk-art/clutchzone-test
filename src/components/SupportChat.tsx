@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import {
   SupportChatMeta,
   SupportMessage,
@@ -42,6 +43,15 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useAuth();
+
+  // Naye message par popup (toast) dikhane ke liye refs
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+  const openRef = useRef(open);
+  openRef.current = open;
+  const prevUnreadRef = useRef<number | null>(null);
+  const lastToastedBroadcastRef = useRef(0);
 
   // Hamesha on (sirf 2 chhote docs): apni chat ka summary + sabse naya broadcast (badge ke liye)
   useEffect(() => listenChatMeta(uid, setMeta), [uid]);
@@ -86,6 +96,38 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
 
   const unreadBadge = (meta?.unreadByPlayer || 0) + (latestBroadcastAt > seenAt ? 1 : 0);
 
+  // Admin ka naya reply aaye aur chat band ho to popup (mobile par badge se zyada nazar aata hai)
+  useEffect(() => {
+    if (meta === null) return;
+    const n = meta.unreadByPlayer;
+    const prev = prevUnreadRef.current;
+    if (n > 0 && !openRef.current && (prev === null || n > prev)) {
+      showToastRef.current('💬 Support se naya message aaya hai. Chat button dabao.', 'info');
+    }
+    prevUnreadRef.current = n;
+  }, [meta?.unreadByPlayer]);
+
+  // Naya bulk message (broadcast) aaye to popup
+  useEffect(() => {
+    if (latestBroadcastAt > seenAt && latestBroadcastAt > lastToastedBroadcastRef.current && !openRef.current) {
+      showToastRef.current('📢 ClutchZone ka naya message aaya hai. Chat button dabao.', 'info');
+    }
+    lastToastedBroadcastRef.current = Math.max(lastToastedBroadcastRef.current, latestBroadcastAt);
+  }, [latestBroadcastAt, seenAt]);
+
+  // Browser tab ke title mein (1) aur installed app icon par badge
+  const baseTitleRef = useRef(document.title.replace(/^\(\d+\)\s*/, ''));
+  useEffect(() => {
+    document.title = unreadBadge > 0 ? `(${unreadBadge}) ${baseTitleRef.current}` : baseTitleRef.current;
+    try {
+      const nav: any = navigator;
+      if (unreadBadge > 0) nav.setAppBadge?.(unreadBadge);
+      else nav.clearAppBadge?.();
+    } catch {
+      /* ignore */
+    }
+  }, [unreadBadge]);
+
   const handleSend = async () => {
     if (!text.trim() || sending) return;
     setSending(true);
@@ -107,11 +149,14 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
         <button
           onClick={() => setOpen(true)}
           aria-label="Support chat"
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-[#F5A623] text-black shadow-lg shadow-[#F5A623]/30 flex items-center justify-center hover:scale-105 transition-transform"
+          className="fixed bottom-[calc(5rem_+_env(safe-area-inset-bottom))] right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-[#F5A623] text-black shadow-lg shadow-[#F5A623]/30 flex items-center justify-center hover:scale-105 transition-transform"
         >
-          <MessageCircle className="w-6 h-6" />
           {unreadBadge > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+            <span className="absolute inset-0 rounded-full bg-[#F5A623] opacity-50 animate-ping pointer-events-none" />
+          )}
+          <MessageCircle className="w-6 h-6 relative" />
+          {unreadBadge > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-6 h-6 px-1.5 rounded-full bg-red-500 border-2 border-[#080B14] text-white text-xs font-bold flex items-center justify-center">
               {unreadBadge}
             </span>
           )}
