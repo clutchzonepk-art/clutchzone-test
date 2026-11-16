@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { PaymentMethod } from '../../types';
-import { OWNER_WHATSAPP } from '../../firebase';
+import { openSupportChat } from '../../supportChat';
 import { ShieldAlert, CheckCircle2, MessageCircle } from 'lucide-react';
 
 export const SetupProfileModal: React.FC = () => {
@@ -36,7 +36,7 @@ export const SetupProfileModal: React.FC = () => {
     }
 
     if (!/^(\+92|0)3[0-9]{9}$/.test(trimmedWhatsapp)) {
-      showToast('❌ Invalid WhatsApp number! Format: 03001234567', 'error');
+      showToast('❌ Invalid mobile number! Format: 03001234567', 'error');
       return;
     }
 
@@ -100,7 +100,7 @@ export const SetupProfileModal: React.FC = () => {
 
             <div>
               <label className="block text-xs font-tech font-bold uppercase text-[#7A84A8] mb-1">
-                WhatsApp Number (For Room ID &amp; Pass)
+                Mobile Number
               </label>
               <input
                 type="tel"
@@ -185,15 +185,14 @@ export const SetupProfileModal: React.FC = () => {
             </div>
 
             <div className="pt-1 text-center">
-              <a
-                href={`https://wa.me/${OWNER_WHATSAPP}?text=${encodeURIComponent('Hi, I am facing a problem while creating my profile on ClutchZone.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={openSupportChat}
                 className="inline-flex items-center gap-1.5 text-[11px] font-tech font-bold uppercase text-[#2ECC71] hover:text-[#4ade80] transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 Problem during profile creation? Click Customer Support
-              </a>
+              </button>
             </div>
           </form>
         </div>
