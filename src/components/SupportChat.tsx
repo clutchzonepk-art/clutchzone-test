@@ -10,6 +10,7 @@ import {
   SupportMessage,
   Broadcast,
   MAX_MESSAGE_LENGTH,
+  OPEN_SUPPORT_CHAT_EVENT,
   listenChatMeta,
   listenMessages,
   listenBroadcasts,
@@ -52,6 +53,13 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
   openRef.current = open;
   const prevUnreadRef = useRef<number | null>(null);
   const lastToastedBroadcastRef = useRef(0);
+
+  // Doosre components (Deposit, Support button...) chat kholne ke liye event bhejte hain
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener(OPEN_SUPPORT_CHAT_EVENT, handler);
+    return () => window.removeEventListener(OPEN_SUPPORT_CHAT_EVENT, handler);
+  }, []);
 
   // Hamesha on (sirf 2 chhote docs): apni chat ka summary + sabse naya broadcast (badge ke liye)
   useEffect(() => listenChatMeta(uid, setMeta), [uid]);
@@ -164,7 +172,7 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
       )}
 
       {open && (
-        <div className="fixed inset-x-0 bottom-0 z-[60] h-[75vh] md:inset-x-auto md:bottom-6 md:right-6 md:h-[32rem] md:w-96 flex flex-col rounded-t-2xl md:rounded-2xl border border-[#1E2340] bg-[#0F1220] shadow-2xl pb-[env(safe-area-inset-bottom)]">
+        <div className="fixed inset-x-0 bottom-0 z-[70] h-[75vh] md:inset-x-auto md:bottom-6 md:right-6 md:h-[32rem] md:w-96 flex flex-col rounded-t-2xl md:rounded-2xl border border-[#1E2340] bg-[#0F1220] shadow-2xl pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E2340]">
             <div>
               <p className="font-heading font-black text-sm uppercase tracking-wider text-[#F5A623]">
