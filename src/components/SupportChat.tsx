@@ -1,9 +1,9 @@
-// Player website ke liye (clutchzone.fun): src/components/SupportChat.tsx
-// Use: <SupportChat uid={firebaseUser.uid} playerName={player.name} />
-// Sirf logged-in player ke liye render karo. supportChat.ts ko website ke services folder mein bhi copy karo.
-// Assumption: Tailwind CSS.
+// src/components/SupportChat.tsx
+// Player <-> Admin support chat widget (floating button + chat panel).
+// Admin ke bulk messages (broadcasts) bhi isi chat mein "ClutchZone" card ki shakal mein nazar aate hain.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { MessageCircle, X, Send } from 'lucide-react';
 import {
   SupportChatMeta,
   SupportMessage,
@@ -14,7 +14,7 @@ import {
   listenBroadcasts,
   sendSupportMessage,
   markReadByPlayer
-} from '../services/supportChat';
+} from '../supportChat';
 
 const SEEN_KEY = 'cz_broadcast_seen';
 
@@ -25,25 +25,29 @@ type Item =
 const timeLabel = (ms: number) =>
   new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-export default function SupportChat({ uid, playerName }: { uid: string; playerName: string }) {
+export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid, playerName }) => {
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState<SupportChatMeta | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [latestBroadcastAt, setLatestBroadcastAt] = useState(0);
-  const [seenAt, setSeenAt] = useState<number>(() => Number(localStorage.getItem(SEEN_KEY) || 0));
+  const [seenAt, setSeenAt] = useState<number>(() => {
+    try {
+      return Number(localStorage.getItem(SEEN_KEY) || 0);
+    } catch {
+      return 0;
+    }
+  });
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Hamesha on: chat summary (1 doc) + sabse naya broadcast (1 doc) sirf badge ke liye
+  // Hamesha on (sirf 2 chhote docs): apni chat ka summary + sabse naya broadcast (badge ke liye)
   useEffect(() => listenChatMeta(uid, setMeta), [uid]);
-  useEffect(
-    () => listenBroadcasts(1, items => setLatestBroadcastAt(items[0]?.createdAt || 0)),
-    []
-  );
+  useEffect(() => listenBroadcasts(1, items => setLatestBroadcastAt(items[0]?.createdAt || 0)), []);
 
-  // Sirf jab chat khuli ho: messages + last 10 broadcasts
+  // Sirf jab chat khuli ho: messages + aakhri 10 broadcasts
   useEffect(() => {
     if (!open) return;
     const u1 = listenMessages(uid, setMessages);
@@ -59,7 +63,11 @@ export default function SupportChat({ uid, playerName }: { uid: string; playerNa
     if (!open) return;
     if (meta && meta.unreadByPlayer > 0) markReadByPlayer(uid);
     if (latestBroadcastAt > seenAt) {
-      localStorage.setItem(SEEN_KEY, String(latestBroadcastAt));
+      try {
+        localStorage.setItem(SEEN_KEY, String(latestBroadcastAt));
+      } catch {
+        /* ignore */
+      }
       setSeenAt(latestBroadcastAt);
     }
   }, [open, meta?.unreadByPlayer, latestBroadcastAt]);
@@ -81,18 +89,13 @@ export default function SupportChat({ uid, playerName }: { uid: string; playerNa
   const handleSend = async () => {
     if (!text.trim() || sending) return;
     setSending(true);
+    setError('');
     try {
-      await sendSupportMessage({
-        chatUid: uid,
-        playerName,
-        text,
-        role: 'player',
-        senderId: uid
-      });
+      await sendSupportMessage({ chatUid: uid, playerName, text, role: 'player', senderId: uid });
       setText('');
     } catch (err) {
-      console.error(err);
-      alert('Message send nahi hua. Dobara try karo.');
+      console.error('Support message error:', err);
+      setError('Message send nahi hua. Dobara try karo.');
     } finally {
       setSending(false);
     }
@@ -100,53 +103,57 @@ export default function SupportChat({ uid, playerName }: { uid: string; playerNa
 
   return (
     <>
-      {/* Floating button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-orange-500 text-2xl shadow-lg"
-          aria-label="Support"
+          aria-label="Support chat"
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-[#F5A623] text-black shadow-lg shadow-[#F5A623]/30 flex items-center justify-center hover:scale-105 transition-transform"
         >
-          💬
+          <MessageCircle className="w-6 h-6" />
           {unreadBadge > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
               {unreadBadge}
             </span>
           )}
         </button>
       )}
 
-      {/* Chat panel */}
       {open && (
-        <div className="fixed inset-x-0 bottom-0 z-50 flex h-[75vh] flex-col rounded-t-2xl border border-zinc-700 bg-zinc-900 shadow-2xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:h-[32rem] sm:w-96 sm:rounded-2xl">
-          <div className="flex items-center justify-between border-b border-zinc-700 p-3">
+        <div className="fixed inset-x-0 bottom-0 z-[60] h-[75vh] md:inset-x-auto md:bottom-6 md:right-6 md:h-[32rem] md:w-96 flex flex-col rounded-t-2xl md:rounded-2xl border border-[#1E2340] bg-[#0F1220] shadow-2xl pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E2340]">
             <div>
-              <p className="text-sm font-bold text-white">ClutchZone Support</p>
-              <p className="text-xs text-zinc-400">Apna masla likho, admin reply karega</p>
+              <p className="font-heading font-black text-sm uppercase tracking-wider text-[#F5A623]">
+                ClutchZone Support
+              </p>
+              <p className="text-xs text-[#7A84A8]">Apna masla likho, admin reply karega</p>
             </div>
-            <button onClick={() => setOpen(false)} className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">
-              ✕
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close chat"
+              className="p-1.5 rounded-lg bg-[#161A2E] text-[#7A84A8] hover:text-[#EEF0FF]"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex-1 space-y-2 overflow-y-auto p-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {items.length === 0 && (
-              <p className="pt-8 text-center text-sm text-zinc-500">
-                Abhi koi message nahi. Pehla message bhejo 👇
-              </p>
+              <p className="pt-8 text-center text-sm text-[#7A84A8]">Abhi koi message nahi. Pehla message bhejo 👇</p>
             )}
             {items.map(it =>
               it.kind === 'broadcast' ? (
-                <div key={'b_' + it.id} className="rounded-xl border border-orange-500/40 bg-orange-500/10 p-3">
-                  <p className="text-xs font-bold text-orange-400">📢 ClutchZone</p>
-                  <p className="whitespace-pre-wrap break-words text-sm text-zinc-100">{it.text}</p>
-                  <p className="mt-1 text-[10px] text-zinc-500">{timeLabel(it.createdAt)}</p>
+                <div key={'b_' + it.id} className="rounded-xl border border-[#F5A623]/40 bg-[#F5A623]/10 p-3">
+                  <p className="text-xs font-bold text-[#F5A623]">📢 ClutchZone</p>
+                  <p className="text-sm text-[#EEF0FF] whitespace-pre-wrap break-words">{it.text}</p>
+                  <p className="mt-1 text-[10px] text-[#7A84A8]">{timeLabel(it.createdAt)}</p>
                 </div>
               ) : (
                 <div key={it.id} className={`flex ${it.msg.senderRole === 'player' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${
-                      it.msg.senderRole === 'player' ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-zinc-100'
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+                      it.msg.senderRole === 'player'
+                        ? 'bg-[#F5A623] text-black'
+                        : 'bg-[#161A2E] text-[#EEF0FF] border border-[#1E2340]'
                     }`}
                   >
                     {it.msg.text}
@@ -158,7 +165,9 @@ export default function SupportChat({ uid, playerName }: { uid: string; playerNa
             <div ref={bottomRef} />
           </div>
 
-          <div className="flex gap-2 border-t border-zinc-700 p-3">
+          {error && <p className="px-3 pb-1 text-xs text-red-400">{error}</p>}
+
+          <div className="flex gap-2 p-3 border-t border-[#1E2340]">
             <textarea
               value={text}
               onChange={e => setText(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
@@ -170,18 +179,19 @@ export default function SupportChat({ uid, playerName }: { uid: string; playerNa
               }}
               rows={1}
               placeholder="Message likho..."
-              className="flex-1 resize-none rounded-lg border border-zinc-700 bg-zinc-800 p-2 text-sm text-white outline-none focus:border-orange-500"
+              className="flex-1 resize-none rounded-lg border border-[#1E2340] bg-[#161A2E] p-2 text-sm text-[#EEF0FF] outline-none focus:border-[#F5A623]"
             />
             <button
               onClick={handleSend}
               disabled={!text.trim() || sending}
-              className="rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white disabled:opacity-50"
+              aria-label="Send message"
+              className="px-3 rounded-lg bg-[#F5A623] text-black disabled:opacity-50 flex items-center justify-center"
             >
-              Send
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
     </>
   );
-}
+};
