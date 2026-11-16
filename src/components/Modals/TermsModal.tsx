@@ -47,11 +47,11 @@ export const TermsModal: React.FC = () => {
             </div>
             <div className="pt-2">
               <h3 className="font-heading font-bold text-sm text-[#F5A623] uppercase">5. Single Account Registration</h3>
-              <p>Each player is entitled to one registered account, verified by a unique Game UID, WhatsApp number, and player name — each may be used on only one ClutchZone account. ClutchZone reserves the right to suspend duplicate or multiple accounts attempting to abuse entry fees, prizes, or the referral program.</p>
+              <p>Each player is entitled to one registered account, verified by a unique Game UID, mobile number, and player name — each may be used on only one ClutchZone account. ClutchZone reserves the right to suspend duplicate or multiple accounts attempting to abuse entry fees, prizes, or the referral program.</p>
             </div>
             <div className="pt-2">
               <h3 className="font-heading font-bold text-sm text-[#F5A623] uppercase">6. Match Disputes &amp; Screen Recordings</h3>
-              <p>Any kill count dispute or match recording review must be submitted to WhatsApp support within 6 hours of match completion.</p>
+              <p>Any kill count dispute or match recording review must be submitted through the in-app Support Chat within 6 hours of match completion.</p>
             </div>
             <div className="pt-2">
               <h3 className="font-heading font-bold text-sm text-[#F5A623] uppercase">7. Referral Program</h3>
@@ -67,7 +67,7 @@ export const TermsModal: React.FC = () => {
             </div>
             <div className="pt-2">
               <h3 className="font-heading font-bold text-sm text-[#F5A623] uppercase">10. Punctuality</h3>
-              <p>Players must join the custom room on time. Our automated system sends the Room ID and Password directly to your registered WhatsApp number 20-30 minutes before match start. Tournaments will start as scheduled whether or not all registered players have joined. Players who miss the start due to being late will receive a 50% entry fee refund.</p>
+              <p>Players must join the custom room on time. Our automated system sends the Room ID and Password directly to your in-app Support Chat 20-30 minutes before match start. Tournaments will start as scheduled whether or not all registered players have joined. Players who miss the start due to being late will receive a 50% entry fee refund.</p>
             </div>
           </div>
 
