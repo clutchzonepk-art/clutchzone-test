@@ -68,8 +68,8 @@ const AppContent: React.FC = () => {
       <BottomNav />
       <ToastContainer />
 
-      {/* Player <-> Admin support chat (sirf logged-in aur profile-complete player ke liye) */}
-      {currentUser && profile && <SupportChat uid={currentUser.uid} playerName={profile.name} />}
+      {/* Player <-> Admin support chat (logged-in player ke liye, profile setup ke dauran bhi) */}
+      {currentUser && <SupportChat uid={currentUser.uid} playerName={profile?.name || currentUser.displayName || 'New Player'} />}
 
       {/* Global Modals */}
       <LoginModal />
