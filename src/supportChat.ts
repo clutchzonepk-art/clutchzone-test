@@ -11,6 +11,7 @@ import {
   orderBy,
   limit,
   limitToLast,
+  where,
   onSnapshot,
   writeBatch,
   serverTimestamp,
@@ -162,6 +163,16 @@ export function listenInbox(cb: (chats: SupportChatMeta[]) => void) {
       );
     },
     err => console.error('listenInbox error:', err)
+  );
+}
+
+// Admin ke liye: kitne unread player messages hain (sab chats ka total). Sidebar badge / sound ke liye.
+export function listenAdminUnreadCount(cb: (totalUnread: number) => void) {
+  const q = query(collection(db, 'supportChats'), where('unreadByAdmin', '>', 0), limit(50));
+  return onSnapshot(
+    q,
+    snap => cb(snap.docs.reduce((n, d) => n + ((d.data() as any).unreadByAdmin || 0), 0)),
+    err => console.error('listenAdminUnreadCount error:', err)
   );
 }
 
