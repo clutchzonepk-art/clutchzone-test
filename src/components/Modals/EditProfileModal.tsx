@@ -41,7 +41,7 @@ export const EditProfileModal: React.FC = () => {
     }
 
     if (!/^(\+92|0)3[0-9]{9}$/.test(trimmedWhatsapp)) {
-      showToast('❌ Invalid WhatsApp number! e.g. 03001234567', 'error');
+      showToast('❌ Invalid mobile number! e.g. 03001234567', 'error');
       return;
     }
 
@@ -115,7 +115,7 @@ export const EditProfileModal: React.FC = () => {
 
             <div>
               <label className="block text-xs font-tech font-bold uppercase text-[#7A84A8] mb-1">
-                WhatsApp Number
+                Mobile Number
               </label>
               <input
                 type="tel"
