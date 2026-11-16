@@ -82,9 +82,19 @@ export const WalletTab: React.FC = () => {
     }
   };
 
-  const handleShareReferralWhatsApp = () => {
+  // Phone ki share sheet kholta hai (jahan player jis app se chahe share kar sakta hai); na ho to copy kar deta hai
+  const handleShareReferral = async () => {
     if (!referralMessage) return;
-    window.open(`https://wa.me/?text=${encodeURIComponent(referralMessage)}`, '_blank');
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: referralMessage });
+        return;
+      }
+      await navigator.clipboard.writeText(referralMessage);
+      showToast('✅ Referral message copied!', 'success');
+    } catch {
+      /* player ne share cancel kar diya */
+    }
   };
 
   // Calculate totals from transactions
@@ -193,11 +203,11 @@ export const WalletTab: React.FC = () => {
                 Copy Message
               </button>
               <button
-                onClick={handleShareReferralWhatsApp}
+                onClick={handleShareReferral}
                 className="flex items-center justify-center gap-1.5 text-[11px] font-tech font-bold uppercase bg-[#2ECC71]/10 border border-[#2ECC71]/40 text-[#2ECC71] px-3 py-2 rounded-lg hover:bg-[#2ECC71]/20 transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                Share on WhatsApp
+                Share Link
               </button>
             </div>
           </div>
