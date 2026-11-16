@@ -20,7 +20,6 @@ import {
   increment,
   arrayUnion,
   serverTimestamp,
-  OWNER_WHATSAPP,
   DEFAULT_TOURNAMENTS,
   DEFAULT_ANNOUNCEMENTS,
   DEFAULT_RESULTS
@@ -28,6 +27,7 @@ import {
 import { PlayerProfile, Tournament, Transaction, MatchResult, Announcement, SupportRequest, PaymentMethod } from '../types';
 import { getModeXp, applyXpGain } from '../leaderboard';
 import confetti from 'canvas-confetti';
+import { sendSupportMessage } from '../supportChat';
 import {
   lookupOwner,
   isLookupTakenByOther,
@@ -210,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // status field in Firestore, so the site itself must check it and
             // refuse to let a banned player use the account.
             if ((existingProfile as any).status === 'banned') {
-              showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
+              showToast('🚫 Your account has been suspended. Please contact ClutchZone support.', 'error');
               await fbSignOut(auth);
               setCurrentUser(null);
               setProfile(null);
@@ -361,7 +361,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const waTaken = await isLookupTakenByOther('whatsapp', data.whatsapp, currentUser.uid);
         if (waTaken) {
-          showToast('❌ This WhatsApp number is already registered on another account!', 'error');
+          showToast('❌ This mobile number is already registered on another account!', 'error');
           return false;
         }
       } catch {
@@ -492,7 +492,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const waTaken = await isLookupTakenByOther('whatsapp', data.whatsapp, currentUser.uid);
         if (waTaken) {
-          showToast('❌ This WhatsApp number is already registered on another account!', 'error');
+          showToast('❌ This mobile number is already registered on another account!', 'error');
           return false;
         }
       } catch {
@@ -543,7 +543,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if ((profile as any).status === 'banned') {
-      showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
+      showToast('🚫 Your account has been suspended. Please contact ClutchZone support.', 'error');
       return false;
     }
 
@@ -742,13 +742,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       closeModal();
-      showToast(`🎮 Tournament Joined! Room ID will be sent on WhatsApp 15m before match!`, 'success');
-
-      // Trigger WhatsApp message window to notify admin
-      const msg = encodeURIComponent(
-        `🎮 *New Tournament Join!*\nTournament: *${tournamentName}*\nPlayer: *${profile.name}*\nUID: *${profile.gameUID}*\nWhatsApp: *${profile.whatsapp}*\nEntry Fee: *Rs ${entryFee}*`
-      );
-      window.open(`https://wa.me/${OWNER_WHATSAPP}?text=${msg}`, '_blank');
+      showToast(`🎮 Tournament Joined! Room ID will be sent in your Support Chat 15m before match!`, 'success');
 
       return true;
     } catch (err: any) {
@@ -774,7 +768,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if ((profile as any).status === 'banned') {
-      showToast('🚫 Your account has been suspended. Contact support on WhatsApp for help.', 'error');
+      showToast('🚫 Your account has been suspended. Please contact ClutchZone support.', 'error');
       return false;
     }
 
@@ -863,11 +857,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       closeModal();
       openModal('withdrawSuccess', { amount, method, account });
 
-      // Notify owner on WhatsApp
-      const waMsg = encodeURIComponent(
-        `🔔 *Withdrawal Request*\nPlayer: *${profile.name}*\nUID: *${profile.gameUID}*\nAmount: *Rs ${amount}*\nMethod: *${method}*\nAccount: *${account}*`
-      );
-      window.open(`https://wa.me/${OWNER_WHATSAPP}?text=${waMsg}`, '_blank');
+      // Admin ko in-app notification: withdrawal request player ki Support Chat mein aa jati hai
+      // (admin ko unread badge milta hai). Fail ho bhi jaye to withdrawal request already save hai.
+      sendSupportMessage({
+        chatUid: currentUser.uid,
+        playerName: profile.name,
+        text:
+          `🔔 Withdrawal Request\n` +
+          `Amount: Rs ${amount}\n` +
+          `Method: ${method}\n` +
+          `Account: ${account}\n` +
+          `Game UID: ${profile.gameUID}`,
+        role: 'player',
+        senderId: currentUser.uid
+      }).catch(err => console.error('Withdrawal chat notice failed:', err));
 
       return true;
     } catch (err: any) {
@@ -971,7 +974,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString()
       });
       closeModal();
-      showToast('✅ Support ticket submitted! We will respond on WhatsApp shortly.', 'success');
+      showToast('✅ Support ticket submitted! We will respond shortly.', 'success');
       return true;
     } catch (err: any) {
       showToast(`Failed to submit support request: ${err.message}`, 'error');
