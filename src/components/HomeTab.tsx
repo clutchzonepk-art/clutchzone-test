@@ -31,7 +31,7 @@ export const HomeTab: React.FC = () => {
   },
   {
     q: "How do I get the Custom Room ID & Password?",
-    a: "15 minutes before the match start time, our automated system sends the Room ID and Password directly to your registered WhatsApp number. You enter the room in the Free Fire app and get ready to drop in!"
+    a: "15 minutes before the match start time, our automated system sends the Room ID and Password directly to your in-app Support Chat (the chat button on screen). You enter the room in the Free Fire app and get ready to drop in!"
   },
   {
     q: "When and how are prizes distributed?",
@@ -51,7 +51,7 @@ export const HomeTab: React.FC = () => {
   },
   {
     q: "I'm having trouble creating my account or joining a match. Who do I contact?",
-    a: "Tap the Customer Support button (available on the profile setup screen and in the app menu) to message us directly on WhatsApp, or submit a support ticket from the app. We usually respond within a few hours."
+    a: "Tap the chat button (💬) on the screen to message our team directly in the app. We usually respond within a few hours."
   }
 ];
 
@@ -329,11 +329,11 @@ export const HomeTab: React.FC = () => {
               </div>
               <h3 className="font-heading font-bold text-lg uppercase text-[#EEF0FF] mb-1">Get Room ID</h3>
               <p className="text-xs text-[#7A84A8] leading-relaxed">
-                Receive Custom Room ID &amp; Password on WhatsApp 15 minutes before the match starts.
+                Receive Custom Room ID &amp; Password in your in-app chat 15 minutes before the match starts.
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-[#252B47] text-[11px] text-[#4A9EFF] font-tech font-bold">
-              📱 WhatsApp Automated Delivery
+              💬 In-App Chat Delivery
             </div>
           </div>
 
