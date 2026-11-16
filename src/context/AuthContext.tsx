@@ -28,6 +28,14 @@ import {
 import { PlayerProfile, Tournament, Transaction, MatchResult, Announcement, SupportRequest, PaymentMethod } from '../types';
 import { getModeXp, applyXpGain } from '../leaderboard';
 import confetti from 'canvas-confetti';
+import {
+  lookupOwner,
+  isLookupTakenByOther,
+  isNameTakenByOther,
+  createProfileWithClaims,
+  updateProfileWithClaims,
+  ensureLookups
+} from '../lookups';
 
 interface ToastInfo {
   id: string;
@@ -230,6 +238,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             }
             setProfile(existingProfile);
+            // Purane players ke lookup docs chup chaap bana do (background, login ko slow nahi karta)
+            void ensureLookups(user.uid, {
+              gameUID: existingProfile.gameUID,
+              whatsapp: existingProfile.whatsapp,
+              referralCode: existingProfile.referralCode,
+              name: existingProfile.name
+            });
             await fetchTransactions(user.uid);
           } else {
             // New user needs profile setup
@@ -304,9 +319,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     for (let attempt = 0; attempt < 5; attempt++) {
       const candidate = base + Math.floor(100 + Math.random() * 900);
       try {
-        const q = query(collection(db, 'players'), where('referralCode', '==', candidate));
-        const snap = await getDocs(q);
-        if (snap.empty) return candidate;
+        const owner = await lookupOwner('refCode', candidate);
+        if (owner === null) return candidate;
       } catch {
         // If offline/error, just return the candidate — collision risk is low
         return candidate;
@@ -333,12 +347,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Check if Game UID already taken
       try {
-        const uidQuery = query(collection(db, 'players'), where('gameUID', '==', data.gameUID));
-        const uidSnap = await getDocs(uidQuery);
-        let uidTaken = false;
-        uidSnap.forEach(d => {
-          if (d.id !== currentUser.uid) uidTaken = true;
-        });
+        const uidTaken = await isLookupTakenByOther('gameUID', data.gameUID, currentUser.uid);
         if (uidTaken) {
           showToast('❌ This Game UID is already registered by another player!', 'error');
           return false;
@@ -350,12 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if WhatsApp number already taken (prevents one person creating
       // multiple accounts with different emails to farm referral bonuses)
       try {
-        const waQuery = query(collection(db, 'players'), where('whatsapp', '==', data.whatsapp));
-        const waSnap = await getDocs(waQuery);
-        let waTaken = false;
-        waSnap.forEach(d => {
-          if (d.id !== currentUser.uid) waTaken = true;
-        });
+        const waTaken = await isLookupTakenByOther('whatsapp', data.whatsapp, currentUser.uid);
         if (waTaken) {
           showToast('❌ This WhatsApp number is already registered on another account!', 'error');
           return false;
@@ -366,12 +370,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Check if player name (IGN) already taken
       try {
-        const nameQuery = query(collection(db, 'players'), where('name', '==', data.name));
-        const nameSnap = await getDocs(nameQuery);
-        let nameTaken = false;
-        nameSnap.forEach(d => {
-          if (d.id !== currentUser.uid) nameTaken = true;
-        });
+        const nameTaken = await isNameTakenByOther(data.name, currentUser.uid);
         if (nameTaken) {
           showToast('❌ This player name is already taken. Please choose a different name!', 'error');
           return false;
@@ -388,12 +387,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.referralCode) {
         try {
-          const refQuery = query(collection(db, 'players'), where('referralCode', '==', data.referralCode));
-          const refSnap = await getDocs(refQuery);
-          if (!refSnap.empty) {
-            const referrerDoc = refSnap.docs[0];
-            if (referrerDoc.id !== currentUser.uid) {
-              referrerUid = referrerDoc.id;
+          const refOwnerUid = await lookupOwner('refCode', data.referralCode);
+          if (refOwnerUid !== null) {
+            if (refOwnerUid !== currentUser.uid) {
+              referrerUid = refOwnerUid;
               referrerCodeUsed = data.referralCode;
             }
           } else {
@@ -435,10 +432,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // meaning a player could see "Profile created!" while nothing was
       // actually saved in Firestore. A failure here must now reach the
       // outer catch instead of being treated as a silent local fallback.
-      await setDoc(doc(db, 'players', currentUser.uid), {
-        ...newProfile,
-        createdAt: serverTimestamp()
-      });
+      // Profile + uske lookup docs (gameUID / whatsapp / referralCode / public name) ek saath
+      // atomic likhe jate hain. Agar koi value beech mein kisi aur ne le li to kuch save nahi hota.
+      await createProfileWithClaims(
+        currentUser.uid,
+        {
+          ...newProfile,
+          createdAt: serverTimestamp()
+        },
+        {
+          gameUID: data.gameUID,
+          whatsapp: data.whatsapp,
+          referralCode: myReferralCode,
+          name: data.name
+        }
+      );
 
       if (referrerUid) {
         // Credit signup bonus transaction for the new player
@@ -482,12 +490,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Check if WhatsApp number is already taken by another account
       try {
-        const waQuery = query(collection(db, 'players'), where('whatsapp', '==', data.whatsapp));
-        const waSnap = await getDocs(waQuery);
-        let waTaken = false;
-        waSnap.forEach(d => {
-          if (d.id !== currentUser.uid) waTaken = true;
-        });
+        const waTaken = await isLookupTakenByOther('whatsapp', data.whatsapp, currentUser.uid);
         if (waTaken) {
           showToast('❌ This WhatsApp number is already registered on another account!', 'error');
           return false;
@@ -498,12 +501,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Check if player name (IGN) is already taken by another account
       try {
-        const nameQuery = query(collection(db, 'players'), where('name', '==', data.name));
-        const nameSnap = await getDocs(nameQuery);
-        let nameTaken = false;
-        nameSnap.forEach(d => {
-          if (d.id !== currentUser.uid) nameTaken = true;
-        });
+        const nameTaken = await isNameTakenByOther(data.name, currentUser.uid);
         if (nameTaken) {
           showToast('❌ This player name is already taken. Please choose a different name!', 'error');
           return false;
@@ -515,12 +513,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Previously wrapped in its own try/catch that swallowed any failure
       // and still reported "Profile updated successfully!" below even when
       // nothing was saved. Let a real failure bubble to the outer catch.
-      await updateDoc(doc(db, 'players', currentUser.uid), {
-        name: data.name,
-        whatsapp: data.whatsapp,
-        paymentMethod: data.paymentMethod,
-        paymentAccount: data.paymentAccount
-      });
+      await updateProfileWithClaims(
+        currentUser.uid,
+        {
+          name: data.name,
+          whatsapp: data.whatsapp,
+          paymentMethod: data.paymentMethod,
+          paymentAccount: data.paymentAccount
+        },
+        { whatsapp: profile.whatsapp }
+      );
 
       setProfile(prev => prev ? { ...prev, ...data } : null);
       closeModal();
