@@ -210,3 +210,8 @@ export function listenBroadcasts(count: number, cb: (items: Broadcast[]) => void
 }
 
 export const deleteBroadcast = (id: string) => deleteDoc(doc(db, 'broadcasts', id));
+
+// ---------- Chat ko kisi bhi jagah se kholna ----------
+// Deposit / Support button / Profile setup jaise components chat widget ko kholne ke liye ye use karte hain.
+export const OPEN_SUPPORT_CHAT_EVENT = 'cz:open-support-chat';
+export const openSupportChat = () => window.dispatchEvent(new Event(OPEN_SUPPORT_CHAT_EVENT));
