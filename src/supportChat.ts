@@ -28,6 +28,7 @@ export interface SupportMessage {
   senderRole: 'player' | 'admin';
   senderId: string;
   createdAt: number; // ms
+  editedAt?: number; // ms (admin ne message edit kiya ho to)
 }
 
 export interface SupportChatMeta {
@@ -109,7 +110,8 @@ export function listenMessages(chatUid: string, cb: (msgs: SupportMessage[]) => 
             text: data.text || '',
             senderRole: data.senderRole,
             senderId: data.senderId,
-            createdAt: toMs(data.createdAt)
+            createdAt: toMs(data.createdAt),
+            editedAt: data.editedAt ? toMs(data.editedAt) : undefined
           } as SupportMessage;
         })
       );
