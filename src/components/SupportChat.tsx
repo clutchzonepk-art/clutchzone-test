@@ -210,7 +210,10 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
                     }`}
                   >
                     {it.msg.text}
-                    <div className="mt-1 text-[10px] opacity-60">{timeLabel(it.createdAt)}</div>
+                    <div className="mt-1 text-[10px] opacity-60">
+                      {timeLabel(it.createdAt)}
+                      {it.msg.editedAt ? ' · edited' : ''}
+                    </div>
                   </div>
                 </div>
               )
