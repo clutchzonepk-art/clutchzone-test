@@ -17,13 +17,18 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // Background message handler — shows the OS notification
+// Admin panel data-only messages bhejta hai (title/body/url data mein), isliye yahan se notification dikhti hai.
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || "ClutchZone";
+  const d = payload.data || {};
+  const title = d.title || payload.notification?.title || "ClutchZone";
   const options = {
-    body: payload.notification?.body || "",
+    body: d.body || payload.notification?.body || "",
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    data: { url: payload.data?.url || "/" }
+    tag: d.tag || "clutchzone-chat",
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: { url: d.url || "/?chat=1" }
   };
   self.registration.showNotification(title, options);
 });
@@ -31,11 +36,15 @@ messaging.onBackgroundMessage((payload) => {
 // Clicking the notification opens/focuses the app
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/";
+  const url = event.notification.data?.url || "/?chat=1";
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && "focus" in client) return client.focus();
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          // Khuli hui app ko batao ke support chat khol de
+          client.postMessage({ type: "OPEN_SUPPORT_CHAT" });
+          return client.focus();
+        }
       }
       if (clients.openWindow) return clients.openWindow(url);
     })
