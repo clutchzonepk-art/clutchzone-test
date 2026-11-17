@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PushStatus, getPushStatus, enablePush, refreshPushToken } from '../push';
 import {
   SupportChatMeta,
   SupportMessage,
@@ -52,7 +53,51 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
   const openRef = useRef(open);
   openRef.current = open;
   const prevUnreadRef = useRef<number | null>(null);
+
+  // Push notifications ki halat (banner ke liye)
+  const [pushStatus, setPushStatus] = useState<PushStatus | null>(null);
+  const [enablingPush, setEnablingPush] = useState(false);
   const lastToastedBroadcastRef = useRef(0);
+
+  // Push: halat check karo, aur agar permission pehle se mili ho to token roz taza karo
+  useEffect(() => {
+    getPushStatus().then(setPushStatus);
+    refreshPushToken(uid);
+  }, [uid]);
+
+  // Notification dabane par chat khulna: naye tab mein /?chat=1, khuli app mein service worker ka message
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('chat') === '1') {
+        setOpen(true);
+        params.delete('chat');
+        const qs = params.toString();
+        window.history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+      }
+    } catch {
+      /* ignore */
+    }
+    const onSwMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === 'OPEN_SUPPORT_CHAT') setOpen(true);
+    };
+    navigator.serviceWorker?.addEventListener('message', onSwMessage);
+    return () => navigator.serviceWorker?.removeEventListener('message', onSwMessage);
+  }, []);
+
+  const handleEnablePush = async () => {
+    setEnablingPush(true);
+    const result = await enablePush(uid);
+    setPushStatus(await getPushStatus());
+    setEnablingPush(false);
+    if (result === 'ok') {
+      showToastRef.current('🔔 Notifications on ho gaye! Ab Room ID aur replies phone par aayenge.', 'success');
+    } else if (result === 'denied') {
+      showToastRef.current('Notifications block hain. Browser/phone settings se allow karein.', 'info');
+    } else if (result === 'error') {
+      showToastRef.current('Notifications on nahi ho sake. Dobara try karein.', 'error');
+    }
+  };
 
   // Doosre components (Deposit, Support button...) chat kholne ke liye event bhejte hain
   useEffect(() => {
@@ -188,6 +233,26 @@ export const SupportChat: React.FC<{ uid: string; playerName: string }> = ({ uid
               <X className="w-4 h-4" />
             </button>
           </div>
+
+          {pushStatus === 'default' && (
+            <div className="mx-3 mt-3 rounded-xl border border-[#F5A623]/40 bg-[#F5A623]/10 p-3 flex items-center gap-3">
+              <p className="flex-1 text-xs text-[#EEF0FF]">
+                🔔 Room ID aur replies ka phone par notification chahiye?
+              </p>
+              <button
+                onClick={handleEnablePush}
+                disabled={enablingPush}
+                className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F5A623] text-black text-xs font-bold disabled:opacity-50"
+              >
+                {enablingPush ? '...' : 'Enable'}
+              </button>
+            </div>
+          )}
+          {pushStatus === 'denied' && (
+            <p className="mx-3 mt-3 text-[11px] text-[#7A84A8]">
+              🔕 Notifications block hain. Phone/browser ki site settings se allow karein.
+            </p>
+          )}
 
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {items.length === 0 && (
