@@ -15,6 +15,7 @@ import {
   Pin
 } from 'lucide-react';
 import { getTimeAgo } from '../firebase';
+import { InstallAppBanner } from './InstallAppBanner';
 
 export const HomeTab: React.FC = () => {
   const { setActiveTab, openModal, profile, announcements, votePollAction } = useAuth();
@@ -57,6 +58,9 @@ export const HomeTab: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Permanent "Install ClutchZone App" banner (install ho jaye to khud chhup jata hai) */}
+      <InstallAppBanner />
+
       {/* Hero Section with Free Fire Background Animation */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#161A2E] via-[#121629] to-[#0A0D18] border border-[#F5A623]/30 p-6 sm:p-10 text-center shadow-2xl">
         {/* Tactical Battle Grid Background Pattern */}
