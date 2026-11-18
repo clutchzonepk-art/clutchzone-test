@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import czLogo from '../assets/images/clutchzone_logo_1787204355803.jpg';
 import { Wallet, LogIn, User, LogOut, MessageSquareText } from 'lucide-react';
+import { InstallNavButton } from './InstallAppBanner';
 
 export const Navbar: React.FC = () => {
   const { profile, activeTab, setActiveTab, openModal, logout } = useAuth();
@@ -88,6 +89,9 @@ export const Navbar: React.FC = () => {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          {/* Install ClutchZone App (install ho jaye to chhup jata hai) */}
+          <InstallNavButton />
+
           {/* Quick Support (opens in-app chat) */}
           <button
             onClick={() => openModal('support')}
