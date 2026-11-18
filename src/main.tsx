@@ -2,6 +2,10 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { initInstallCapture } from './install';
+
+// Install-app event React se pehle hi aa sakta hai, isliye pehle pakad lo
+initInstallCapture();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
